@@ -11,9 +11,9 @@ import { AuditService } from './AuditService';
 import { OtpService } from './OtpService';
 
 export interface RegisterInput {
-  email: string;
+  phone: string;
+  email?: string;
   password: string;
-  phone?: string;
   role: UserRole.WORKER | UserRole.EMPLOYER; // admins are never self-registered
   fullNameOrBusinessName: string;
 }
@@ -23,16 +23,24 @@ export class AuthService {
     return AppDataSource.transaction(async (manager) => {
       const userRepo = manager.getRepository(User);
 
-      const existing = await userRepo.findOne({ where: { email: input.email } });
-      if (existing) {
-        throw ApiError.conflict('An account with this email already exists');
+      const existingPhone = await userRepo.findOne({ where: { phone: input.phone } });
+      if (existingPhone) {
+        throw ApiError.conflict('An account with this mobile number already exists');
+      }
+
+      const formattedEmail = input.email && input.email.trim() ? input.email.trim().toLowerCase() : null;
+      if (formattedEmail) {
+        const existingEmail = await userRepo.findOne({ where: { email: formattedEmail } });
+        if (existingEmail) {
+          throw ApiError.conflict('An account with this email already exists');
+        }
       }
 
       const passwordHash = await hashPassword(input.password);
 
       const user = userRepo.create({
-        email: input.email,
-        phone: input.phone ?? null,
+        email: formattedEmail,
+        phone: input.phone,
         passwordHash,
         role: input.role, // Only ever WORKER or EMPLOYER from public registration
         isActive: true,
@@ -173,6 +181,7 @@ export class AuthService {
     if (!user.isActive) throw ApiError.forbidden('This account is deactivated');
 
     const target = user.phone || user.email;
+    if (!target) throw ApiError.badRequest('No valid phone or email linked to account');
     const code = await OtpService.requestOtp(target, OtpPurpose.PASSWORD_RESET);
     return { target, mockCode: code };
   }
@@ -186,6 +195,7 @@ export class AuthService {
     if (!user) throw ApiError.notFound('Account not found');
 
     const target = user.phone || user.email;
+    if (!target) throw ApiError.badRequest('No valid phone or email linked to account');
     await OtpService.verifyOtp(target, OtpPurpose.PASSWORD_RESET, code);
 
     user.passwordHash = await hashPassword(newPassword);
@@ -268,6 +278,7 @@ export class AuthService {
       user: {
         id: user.id,
         email: user.email,
+        phone: user.phone,
         role: user.role,
         isActive: user.isActive,
       },

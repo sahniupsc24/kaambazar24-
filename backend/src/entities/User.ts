@@ -5,8 +5,8 @@ import { UserRole } from './enums';
 @Entity('users')
 export class User extends AppBaseEntity {
   @Index({ unique: true })
-  @Column({ type: 'varchar', length: 255, unique: true })
-  email!: string;
+  @Column({ type: 'varchar', length: 255, unique: true, nullable: true })
+  email!: string | null;
 
   @Index({ unique: true })
   @Column({ type: 'varchar', length: 20, unique: true, nullable: true })

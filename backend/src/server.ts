@@ -11,17 +11,22 @@ async function main() {
     console.log('Database connection established.');
 
     // Auto-run pending database migrations in production
-    // eslint-disable-next-line no-console
-    console.log('Running database migrations...');
-    await AppDataSource.runMigrations();
-    // eslint-disable-next-line no-console
-    console.log('Database migrations completed.');
+    try {
+      // eslint-disable-next-line no-console
+      console.log('Running database migrations...');
+      await AppDataSource.runMigrations();
+      // eslint-disable-next-line no-console
+      console.log('Database migrations completed.');
+    } catch (migErr) {
+      // eslint-disable-next-line no-console
+      console.warn('Migration warning (continuing to seed & start server):', (migErr as Error)?.message || migErr);
+    }
 
     // Auto-seed default Admin, Plans, Categories, and Locations
     await autoSeedOnStartup();
   } catch (err) {
     // eslint-disable-next-line no-console
-    console.error('Failed to initialize database/migrations:', err);
+    console.error('Failed to initialize database:', err);
     process.exit(1);
   }
 

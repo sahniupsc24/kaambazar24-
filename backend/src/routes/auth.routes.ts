@@ -9,11 +9,14 @@ const router = Router();
 router.post(
   '/register',
   validate([
-    body('email').isEmail().normalizeEmail(),
+    body('phone')
+      .trim()
+      .notEmpty().withMessage('Mobile number is required')
+      .matches(/^[6-9]\d{9}$/).withMessage('Please enter a valid 10-digit Indian mobile number'),
+    body('email').optional({ checkFalsy: true }).isEmail().normalizeEmail().withMessage('Please enter a valid email address'),
     body('password').isLength({ min: 8 }).withMessage('Password must be at least 8 characters'),
     body('role').isIn(['WORKER', 'EMPLOYER']),
-    body('fullNameOrBusinessName').trim().notEmpty(),
-    body('phone').optional().isMobilePhone('any'),
+    body('fullNameOrBusinessName').trim().notEmpty().withMessage('Name is required'),
   ]),
   AuthController.register
 );

@@ -7,7 +7,8 @@ export enum UserRole {
 
 export interface AuthUser {
   id: string;
-  email: string;
+  email: string | null;
+  phone?: string | null;
   role: UserRole;
   isActive: boolean;
 }

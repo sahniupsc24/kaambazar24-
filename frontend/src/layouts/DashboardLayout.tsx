@@ -77,9 +77,9 @@ export function DashboardLayout({ children, links, title, breadcrumbs }: Props) 
         {/* User Card */}
         {user && (
           <div style={{ padding: '8px 12px', background: 'var(--bg-hover)', borderRadius: 'var(--radius-md)', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 10, border: '1px solid var(--border)' }}>
-            <Avatar name={user.email} role={user.role} size={34} />
+            <Avatar name={user.email || user.phone || 'User'} role={user.role} size={34} />
             <div style={{ overflow: 'hidden', flex: 1 }}>
-              <div style={{ fontSize: 12.5, fontWeight: 700, color: 'var(--text-main)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user.email}</div>
+              <div style={{ fontSize: 12.5, fontWeight: 700, color: 'var(--text-main)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user.email || user.phone}</div>
               <span style={{ fontSize: 9.5, fontWeight: 700, padding: '1px 6px', borderRadius: 4, background: roleBg, color: roleAccent, display: 'inline-block', marginTop: 2 }}>{user.role}</span>
             </div>
           </div>
@@ -146,14 +146,14 @@ export function DashboardLayout({ children, links, title, breadcrumbs }: Props) 
                 onClick={() => setProfileMenuOpen((o) => !o)}
                 style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, padding: '4px 8px', borderRadius: 'var(--radius-md)', transition: 'background 0.15s' }}
               >
-                {user && <Avatar name={user.email} role={user.role} size={32} />}
+                {user && <Avatar name={user.email || user.phone || 'User'} role={user.role} size={32} />}
                 <span style={{ fontSize: 12, color: 'var(--text-muted)', display: 'flex', alignItems: 'center' }}>▾</span>
               </button>
               {/* Profile Menu Dropdown */}
               {profileMenuOpen && (
                 <div style={{ position: 'absolute', right: 0, top: '100%', marginTop: 8, background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-lg)', minWidth: 200, padding: 8, zIndex: 100 }}>
                   <div style={{ padding: '8px 12px', borderBottom: '1px solid var(--border)', marginBottom: 8 }}>
-                    <div style={{ fontWeight: 700, fontSize: 13, color: 'var(--text-main)' }}>{user?.email}</div>
+                    <div style={{ fontWeight: 700, fontSize: 13, color: 'var(--text-main)' }}>{user?.email || user?.phone}</div>
                     <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>Logged in as {user?.role}</div>
                   </div>
                   <button

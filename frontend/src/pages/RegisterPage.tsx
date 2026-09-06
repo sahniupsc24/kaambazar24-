@@ -21,9 +21,20 @@ export function RegisterPage() {
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     setError('');
+    const cleanPhone = phone.trim();
+    if (!/^[6-9]\d{9}$/.test(cleanPhone)) {
+      setError('Please enter a valid 10-digit Indian mobile number starting with 6, 7, 8, or 9');
+      return;
+    }
     setIsSubmitting(true);
     try {
-      await register({ email, password, phone: phone || undefined, role, fullNameOrBusinessName: name });
+      await register({
+        phone: cleanPhone,
+        email: email.trim() || undefined,
+        password,
+        role,
+        fullNameOrBusinessName: name,
+      });
       navigate(role === UserRole.WORKER ? '/worker/dashboard' : '/employer/dashboard');
     } catch (err: any) {
       const msg = err?.response?.data?.message;
@@ -88,14 +99,14 @@ export function RegisterPage() {
           <GoogleSignInButton role={role} label={`Sign up as ${role === UserRole.WORKER ? 'Worker' : 'Employer'} with Google`} />
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, margin: '16px 0 12px' }}>
             <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
-            <span style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 600 }}>OR WITH EMAIL</span>
+            <span style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 600 }}>OR REGISTER DIRECTLY</span>
             <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
           </div>
         </div>
 
         <form onSubmit={handleSubmit} style={{ display: 'grid', gap: 16 }}>
           <div>
-            <label className="form-label">{role === UserRole.WORKER ? 'Full Name (पूरा नाम)' : 'Business / Contact Name'}</label>
+            <label className="form-label">{role === UserRole.WORKER ? 'Full Name (पूरा नाम) *' : 'Business / Contact Name *'}</label>
             <input
               className="form-input"
               placeholder={role === UserRole.WORKER ? 'e.g. Ramesh Kumar' : 'e.g. ABC Construction'}
@@ -103,15 +114,23 @@ export function RegisterPage() {
             />
           </div>
           <div>
-            <label className="form-label">Email Address (ईमेल)</label>
-            <input className="form-input" type="email" placeholder="e.g. ramesh@example.com" required value={email} onChange={(e) => setEmail(e.target.value)} />
+            <label className="form-label">Phone Number (फ़ोन नंबर) <span style={{ color: '#ef4444' }}>*</span></label>
+            <input
+              className="form-input"
+              type="tel"
+              placeholder="e.g. 9876543210 (Mandatory)"
+              required
+              maxLength={10}
+              value={phone}
+              onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
+            />
           </div>
           <div>
-            <label className="form-label">Phone Number (फ़ोन नंबर)</label>
-            <input className="form-input" placeholder="e.g. 9876543210 (Optional)" value={phone} onChange={(e) => setPhone(e.target.value)} />
+            <label className="form-label">Email Address (ईमेल) <span style={{ color: 'var(--text-muted)', fontWeight: 400 }}>(Optional / वैकलीक)</span></label>
+            <input className="form-input" type="email" placeholder="e.g. ramesh@example.com (Optional)" value={email} onChange={(e) => setEmail(e.target.value)} />
           </div>
           <div>
-            <label className="form-label">Password (पासवर्ड)</label>
+            <label className="form-label">Password (पासवर्ड) *</label>
             <input className="form-input" type="password" placeholder="Min 8 characters" required minLength={8} value={password} onChange={(e) => setPassword(e.target.value)} />
           </div>
           

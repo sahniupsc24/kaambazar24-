@@ -10,9 +10,9 @@ interface AuthContextValue {
   verifyOtp: (phone: string, code: string) => Promise<AuthUser>;
   adminLogin: (identifier: string, password: string) => Promise<AuthUser>;
   register: (input: {
-    email: string;
+    phone: string;
+    email?: string;
     password: string;
-    phone?: string;
     role: UserRole.WORKER | UserRole.EMPLOYER;
     fullNameOrBusinessName: string;
   }) => Promise<void>;
@@ -71,9 +71,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   async function register(input: {
-    email: string;
+    phone: string;
+    email?: string;
     password: string;
-    phone?: string;
     role: UserRole.WORKER | UserRole.EMPLOYER;
     fullNameOrBusinessName: string;
   }) {

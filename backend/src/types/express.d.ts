@@ -6,7 +6,7 @@ declare global {
       user?: {
         id: string; // User.id — the ONLY identity source for ownership checks
         role: UserRole;
-        email: string;
+        email?: string | null;
       };
     }
   }

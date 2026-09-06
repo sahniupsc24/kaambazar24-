@@ -122,7 +122,7 @@ export function NavBar() {
                   fontWeight: 600,
                 }}
               >
-                <Avatar name={user.email} role={user.role} size={28} />
+                <Avatar name={user.email || user.phone || 'User'} role={user.role} size={28} />
                 <span>Dashboard</span>
                 <span
                   style={{
@@ -270,7 +270,7 @@ export function NavBar() {
                 }}
               >
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <Avatar name={user.email} role={user.role} size={28} />
+                  <Avatar name={user.email || user.phone || 'User'} role={user.role} size={28} />
                   <span>Dashboard</span>
                 </div>
                 <span

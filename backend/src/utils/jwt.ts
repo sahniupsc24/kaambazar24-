@@ -5,7 +5,7 @@ import { UserRole } from '../entities/enums';
 export interface AccessTokenPayload {
   sub: string; // User.id
   role: UserRole;
-  email: string;
+  email?: string | null;
 }
 
 export interface RefreshTokenPayload {

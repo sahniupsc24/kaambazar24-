@@ -5,9 +5,19 @@ import axios from 'axios';
 // In production the frontend and backend are deployed separately (e.g.
 // Vercel + Render), so VITE_API_BASE_URL must point at the real backend
 // URL — set it in the hosting provider's environment variables.
-const baseURL = import.meta.env.VITE_API_BASE_URL
-  ? `${import.meta.env.VITE_API_BASE_URL}/api`
-  : '/api';
+const getBaseURL = () => {
+  const envUrl = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL;
+  if (envUrl) {
+    return envUrl.endsWith('/api') ? envUrl : `${envUrl}/api`;
+  }
+  // In production (e.g. Vercel), default to live Railway backend API
+  if (import.meta.env.PROD) {
+    return 'https://kaam-bazar-production.up.railway.app/api';
+  }
+  return '/api';
+};
+
+const baseURL = getBaseURL();
 
 export const api = axios.create({
   baseURL,
