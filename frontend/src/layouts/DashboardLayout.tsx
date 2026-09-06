@@ -77,7 +77,7 @@ export function DashboardLayout({ children, links, title, breadcrumbs }: Props) 
         {/* User Card */}
         {user && (
           <div style={{ padding: '8px 12px', background: 'var(--bg-hover)', borderRadius: 'var(--radius-md)', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 10, border: '1px solid var(--border)' }}>
-            <Avatar name={user.email || user.phone || 'User'} role={user.role} size={34} />
+            <Avatar name={user.email || user.phone || 'User'} role={user.role} size={34} avatarUrl={user.avatarUrl} />
             <div style={{ overflow: 'hidden', flex: 1 }}>
               <div style={{ fontSize: 12.5, fontWeight: 700, color: 'var(--text-main)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user.email || user.phone}</div>
               <span style={{ fontSize: 9.5, fontWeight: 700, padding: '1px 6px', borderRadius: 4, background: roleBg, color: roleAccent, display: 'inline-block', marginTop: 2 }}>{user.role}</span>
@@ -146,7 +146,7 @@ export function DashboardLayout({ children, links, title, breadcrumbs }: Props) 
                 onClick={() => setProfileMenuOpen((o) => !o)}
                 style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, padding: '4px 8px', borderRadius: 'var(--radius-md)', transition: 'background 0.15s' }}
               >
-                {user && <Avatar name={user.email || user.phone || 'User'} role={user.role} size={32} />}
+                {user && <Avatar name={user.email || user.phone || 'User'} role={user.role} size={32} avatarUrl={user.avatarUrl} />}
                 <span style={{ fontSize: 12, color: 'var(--text-muted)', display: 'flex', alignItems: 'center' }}>▾</span>
               </button>
               {/* Profile Menu Dropdown */}

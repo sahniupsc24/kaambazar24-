@@ -56,9 +56,17 @@ export function WorkerProfilePage() {
         <Card>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20, flexWrap: 'wrap', gap: 12 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-              <div style={{ width: 50, height: 50, borderRadius: '50%', background: '#ccfbf1', color: '#0d9488', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 20 }}>
-                {(profile.fullName?.[0] ?? 'W').toUpperCase()}
-              </div>
+              {profile.avatarUrl || profile.user?.avatarUrl ? (
+                <img
+                  src={profile.avatarUrl || profile.user?.avatarUrl}
+                  alt={profile.fullName || 'Worker'}
+                  style={{ width: 50, height: 50, borderRadius: '50%', objectFit: 'cover', border: '2px solid var(--border)' }}
+                />
+              ) : (
+                <div style={{ width: 50, height: 50, borderRadius: '50%', background: '#ccfbf1', color: '#0d9488', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 20 }}>
+                  {(profile.fullName?.[0] ?? 'W').toUpperCase()}
+                </div>
+              )}
               <div>
                 <h2 style={{ fontSize: 18, fontWeight: 800, margin: 0 }}>{profile.fullName || 'Worker Profile'}</h2>
                 <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>{profile.user?.email ?? profile.user?.phone ?? 'Verified Worker'}</div>

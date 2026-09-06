@@ -3,7 +3,6 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { api } from '../api/client';
 import { ErrorState, PrimaryButton, SecondaryButton } from '../components/common/Primitives';
-import { GoogleSignInButton } from '../components/GoogleSignInButton';
 
 type Mode = 'password' | 'otp';
 
@@ -132,15 +131,7 @@ export function LoginPage() {
           </p>
         </div>
 
-        {/* Google Sign-In */}
-        <div style={{ marginBottom: 18 }}>
-          <GoogleSignInButton label="Sign in with Google" />
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12, margin: '16px 0 14px' }}>
-            <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
-            <span style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 600 }}>OR</span>
-            <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
-          </div>
-        </div>
+
 
         {/* Mode Tabs */}
         <div style={{

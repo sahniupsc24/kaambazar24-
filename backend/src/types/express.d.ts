@@ -7,6 +7,8 @@ declare global {
         id: string; // User.id — the ONLY identity source for ownership checks
         role: UserRole;
         email?: string | null;
+        phone?: string | null;
+        avatarUrl?: string | null;
       };
     }
   }

@@ -29,7 +29,7 @@ export async function authenticate(req: Request, _res: Response, next: NextFunct
     // req.user.role always comes from the freshly-loaded DB row, never
     // trusted from the JWT payload alone — protects against a stale token
     // surviving a role downgrade.
-    req.user = { id: user.id, role: user.role, email: user.email };
+    req.user = { id: user.id, role: user.role, email: user.email, phone: user.phone, avatarUrl: user.avatarUrl };
     next();
   } catch (err) {
     if (err instanceof ApiError) return next(err);

@@ -252,9 +252,20 @@ export function IconButton({ children, ...props }: React.ButtonHTMLAttributes<HT
 /* ============================================
    AVATAR
    ============================================ */
-export function Avatar({ name, role, size = 38 }: { name: string; role?: string; size?: number }) {
+export function Avatar({ name, role, size = 38, avatarUrl }: { name: string; role?: string; size?: number; avatarUrl?: string | null }) {
   const initials = name.split(/[\s@]/).map((n) => n[0]).join('').substring(0, 2).toUpperCase() || 'U';
   const roleBg = role === 'ADMIN' || role === 'SUPER_ADMIN' ? '#6366f1' : role === 'EMPLOYER' ? '#0284c7' : '#0d9488';
+
+  if (avatarUrl) {
+    return (
+      <img
+        src={avatarUrl}
+        alt={name}
+        style={{ width: size, height: size, borderRadius: '50%', objectFit: 'cover', boxShadow: '0 2px 5px rgba(0,0,0,0.12)', flexShrink: 0, border: `2px solid ${roleBg}` }}
+      />
+    );
+  }
+
   return (
     <div style={{ width: size, height: size, borderRadius: '50%', background: roleBg, color: '#fff', fontWeight: 700, fontSize: size * 0.36, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 5px rgba(0,0,0,0.12)', flexShrink: 0 }}>
       {initials}

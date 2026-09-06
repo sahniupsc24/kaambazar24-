@@ -52,12 +52,20 @@ export function EmployerProfilePage() {
         <Card>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20, flexWrap: 'wrap', gap: 12 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-              <div style={{ width: 50, height: 50, borderRadius: 12, background: '#e0f2fe', color: '#0284c7', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 20 }}>
-                🏢
-              </div>
+              {profile.avatarUrl || profile.user?.avatarUrl ? (
+                <img
+                  src={profile.avatarUrl || profile.user?.avatarUrl}
+                  alt={profile.businessName || 'Employer'}
+                  style={{ width: 50, height: 50, borderRadius: 12, objectFit: 'cover', border: '2px solid var(--border)' }}
+                />
+              ) : (
+                <div style={{ width: 50, height: 50, borderRadius: 12, background: '#e0f2fe', color: '#0284c7', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 20 }}>
+                  🏢
+                </div>
+              )}
               <div>
                 <h2 style={{ fontSize: 18, fontWeight: 800, margin: 0 }}>{profile.businessName || 'Business Profile'}</h2>
-                <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>{profile.user?.email ?? 'Employer Account'}</div>
+                <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>{profile.user?.email ?? profile.user?.phone ?? 'Employer Account'}</div>
               </div>
             </div>
             {profile.isVerified && <span style={{ fontSize: 12, fontWeight: 700, padding: '3px 10px', borderRadius: 99, background: '#dcfce7', color: '#15803d' }}>✓ Verified Employer</span>}

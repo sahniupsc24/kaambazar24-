@@ -11,6 +11,7 @@ export interface AuthUser {
   phone?: string | null;
   role: UserRole;
   isActive: boolean;
+  avatarUrl?: string | null;
 }
 
 export interface Category {

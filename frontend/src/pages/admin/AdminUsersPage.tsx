@@ -82,7 +82,7 @@ export function AdminUsersPage() {
   }
 
   async function handleUpdateUser() {
-    if (!editUser || !editForm.email.trim()) { toast('Email is required', 'error'); return; }
+    if (!editUser || (!editForm.email.trim() && !editForm.phone.trim())) { toast('Email or Phone is required', 'error'); return; }
     setSubmitting(true);
     try {
       await api.put(`/admin/users/${editUser.id}`, {
@@ -103,7 +103,7 @@ export function AdminUsersPage() {
 
   const filtered = users.filter((u) => {
     const matchesSearch =
-      u.email.toLowerCase().includes(search.toLowerCase()) ||
+      (u.email && u.email.toLowerCase().includes(search.toLowerCase())) ||
       (u.phone && u.phone.toLowerCase().includes(search.toLowerCase())) ||
       u.role.toLowerCase().includes(search.toLowerCase());
     const matchesRole = roleFilter === 'ALL' || u.role === roleFilter;
@@ -117,11 +117,11 @@ export function AdminUsersPage() {
       render: (r) => (
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <div style={{ width: 34, height: 34, borderRadius: '50%', background: r.role === 'EMPLOYER' ? '#e0f2fe' : r.role === 'ADMIN' || r.role === 'SUPER_ADMIN' ? '#e0e7ff' : '#ccfbf1', color: r.role === 'EMPLOYER' ? '#0284c7' : r.role === 'ADMIN' || r.role === 'SUPER_ADMIN' ? '#6366f1' : '#0d9488', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 13, flexShrink: 0 }}>
-            {(r.email?.[0] ?? 'U').toUpperCase()}
+            {((r.email || r.phone || 'U')[0]).toUpperCase()}
           </div>
           <div>
-            <div style={{ fontWeight: 600, fontSize: 13.5 }}>{r.email}</div>
-            {r.phone && <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{r.phone}</div>}
+            <div style={{ fontWeight: 600, fontSize: 13.5 }}>{r.email || r.phone || '—'}</div>
+            {r.email && r.phone && <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{r.phone}</div>}
           </div>
         </div>
       ),
@@ -244,7 +244,7 @@ export function AdminUsersPage() {
         onClose={() => setConfirmUser(null)}
         onConfirm={() => { toggleStatus(confirmUser); setConfirmUser(null); }}
         title={confirmUser?.isActive ? 'Ban User' : 'Unban User'}
-        message={`Are you sure you want to ${confirmUser?.isActive ? 'ban' : 'unban'} ${confirmUser?.email}?`}
+        message={`Are you sure you want to ${confirmUser?.isActive ? 'ban' : 'unban'} ${confirmUser?.email || confirmUser?.phone || 'this user'}?`}
         confirmLabel={confirmUser?.isActive ? 'Ban User' : 'Unban User'}
         danger={confirmUser?.isActive}
       />
@@ -255,14 +255,14 @@ export function AdminUsersPage() {
         onClose={() => setDeleteUser(null)}
         onConfirm={() => { handleDelete(deleteUser); setDeleteUser(null); }}
         title="Delete User"
-        message={`This will permanently delete ${deleteUser?.email} and all their data. This cannot be undone.`}
+        message={`This will permanently delete ${deleteUser?.email || deleteUser?.phone || 'this user'} and all their data. This cannot be undone.`}
         confirmLabel="Delete Permanently"
         danger
       />
 
       {/* Reset password modal */}
       <Modal isOpen={!!resetUser} onClose={() => setResetUser(null)} title="Reset Password">
-        <p style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 14 }}>Setting a new password for <strong>{resetUser?.email}</strong></p>
+        <p style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 14 }}>Setting a new password for <strong>{resetUser?.email || resetUser?.phone || 'user'}</strong></p>
         <FormGroup label="New Password" required>
           <Input type="password" placeholder="Min. 6 characters" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} />
         </FormGroup>
