@@ -21,27 +21,30 @@ export class InitialSchema1735000000000 implements MigrationInterface {
 
   public async up(queryRunner: QueryRunner): Promise<void> {
     // ---- Enums ----
-    await queryRunner.query(`CREATE TYPE "users_role_enum" AS ENUM ('WORKER','EMPLOYER','ADMIN','SUPER_ADMIN')`);
-    await queryRunner.query(`CREATE TYPE "roles_name_enum" AS ENUM ('WORKER','EMPLOYER','ADMIN','SUPER_ADMIN')`);
-    await queryRunner.query(`CREATE TYPE "locations_level_enum" AS ENUM ('COUNTRY','STATE','CITY','AREA')`);
-    await queryRunner.query(`CREATE TYPE "jobs_worktype_enum" AS ENUM ('FULL_TIME','PART_TIME','GIG','CONTRACT')`);
-    await queryRunner.query(`CREATE TYPE "jobs_status_enum" AS ENUM ('DRAFT','OPEN','CLOSED','FILLED')`);
-    await queryRunner.query(`CREATE TYPE "compensation_type_enum" AS ENUM ('HOURLY','DAILY','WEEKLY','MONTHLY')`);
-    await queryRunner.query(`CREATE TYPE "applications_status_enum" AS ENUM ('SUBMITTED','UNDER_REVIEW','ACCEPTED','REJECTED','WITHDRAWN')`);
-    await queryRunner.query(`CREATE TYPE "hirings_status_enum" AS ENUM ('CREATED','CONTRACT_DRAFTED','CANCELLED')`);
-    await queryRunner.query(`CREATE TYPE "contracts_status_enum" AS ENUM ('DRAFT','SENT','ACCEPTED','ACTIVE','COMPLETED','TERMINATED')`);
-    await queryRunner.query(`CREATE TYPE "work_entries_status_enum" AS ENUM ('SUBMITTED','APPROVED','REJECTED','CORRECTING')`);
-    await queryRunner.query(`CREATE TYPE "payments_status_enum" AS ENUM ('PENDING','PROCESSING','PAID','FAILED')`);
-    await queryRunner.query(`CREATE TYPE "rater_role_enum" AS ENUM ('WORKER','EMPLOYER')`);
-    await queryRunner.query(`CREATE TYPE "otp_purpose_enum" AS ENUM ('REGISTRATION','LOGIN','PASSWORD_RESET','PHONE_VERIFICATION')`);
+    const enums = [
+      `DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'users_role_enum') THEN CREATE TYPE "users_role_enum" AS ENUM ('WORKER','EMPLOYER','ADMIN','SUPER_ADMIN'); END IF; END $$;`,
+      `DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'roles_name_enum') THEN CREATE TYPE "roles_name_enum" AS ENUM ('WORKER','EMPLOYER','ADMIN','SUPER_ADMIN'); END IF; END $$;`,
+      `DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'locations_level_enum') THEN CREATE TYPE "locations_level_enum" AS ENUM ('COUNTRY','STATE','CITY','AREA'); END IF; END $$;`,
+      `DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'jobs_worktype_enum') THEN CREATE TYPE "jobs_worktype_enum" AS ENUM ('FULL_TIME','PART_TIME','GIG','CONTRACT'); END IF; END $$;`,
+      `DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'jobs_status_enum') THEN CREATE TYPE "jobs_status_enum" AS ENUM ('DRAFT','OPEN','CLOSED','FILLED'); END IF; END $$;`,
+      `DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'compensation_type_enum') THEN CREATE TYPE "compensation_type_enum" AS ENUM ('HOURLY','DAILY','WEEKLY','MONTHLY'); END IF; END $$;`,
+      `DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'applications_status_enum') THEN CREATE TYPE "applications_status_enum" AS ENUM ('SUBMITTED','UNDER_REVIEW','ACCEPTED','REJECTED','WITHDRAWN'); END IF; END $$;`,
+      `DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'hirings_status_enum') THEN CREATE TYPE "hirings_status_enum" AS ENUM ('CREATED','CONTRACT_DRAFTED','CANCELLED'); END IF; END $$;`,
+      `DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'contracts_status_enum') THEN CREATE TYPE "contracts_status_enum" AS ENUM ('DRAFT','SENT','ACCEPTED','ACTIVE','COMPLETED','TERMINATED'); END IF; END $$;`,
+      `DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'work_entries_status_enum') THEN CREATE TYPE "work_entries_status_enum" AS ENUM ('SUBMITTED','APPROVED','REJECTED','CORRECTING'); END IF; END $$;`,
+      `DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'payments_status_enum') THEN CREATE TYPE "payments_status_enum" AS ENUM ('PENDING','PROCESSING','PAID','FAILED'); END IF; END $$;`,
+      `DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'rater_role_enum') THEN CREATE TYPE "rater_role_enum" AS ENUM ('WORKER','EMPLOYER'); END IF; END $$;`,
+      `DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'otp_purpose_enum') THEN CREATE TYPE "otp_purpose_enum" AS ENUM ('REGISTRATION','LOGIN','PASSWORD_RESET','PHONE_VERIFICATION'); END IF; END $$;`,
+    ];
+    for (const q of enums) await queryRunner.query(q);
 
     // ---- Foundation: users ----
     await queryRunner.query(`
-      CREATE TABLE "users" (
+      CREATE TABLE IF NOT EXISTS "users" (
         "id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
         "createdAt" timestamptz NOT NULL DEFAULT now(),
         "updatedAt" timestamptz NOT NULL DEFAULT now(),
-        "email" varchar(255) NOT NULL UNIQUE,
+        "email" varchar(255) UNIQUE,
         "phone" varchar(20) UNIQUE,
         "passwordHash" varchar(255) NOT NULL,
         "role" users_role_enum NOT NULL,
@@ -51,7 +54,7 @@ export class InitialSchema1735000000000 implements MigrationInterface {
         "lastLoginAt" timestamptz
       );
     `);
-    await queryRunner.query(`CREATE INDEX "IDX_users_email" ON "users" ("email");`);
+    await queryRunner.query(`CREATE INDEX IF NOT EXISTS "IDX_users_email" ON "users" ("email");`);
 
     // ---- roles (descriptive metadata only, not the RBAC source of truth) ----
     await queryRunner.query(`
