@@ -190,7 +190,7 @@ export function LoginPage() {
               </label>
               <input
                 type="text"
-                placeholder="e.g. admin@kaambazar.com"
+                placeholder="e.g. 9876543210 or user@example.com"
                 required
                 autoComplete="username"
                 value={identifier}
