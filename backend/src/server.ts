@@ -10,6 +10,18 @@ async function main() {
     // eslint-disable-next-line no-console
     console.log('Database connection established.');
 
+    // Ensure missing tables and columns are automatically created
+    try {
+      // eslint-disable-next-line no-console
+      console.log('Synchronizing database schema...');
+      await AppDataSource.synchronize();
+      // eslint-disable-next-line no-console
+      console.log('Database schema synchronized successfully.');
+    } catch (syncErr) {
+      // eslint-disable-next-line no-console
+      console.warn('Schema sync warning:', (syncErr as Error)?.message || syncErr);
+    }
+
     // Auto-run pending database migrations in production
     try {
       // eslint-disable-next-line no-console
