@@ -2,15 +2,26 @@ import 'reflect-metadata';
 import { AppDataSource } from './config/data-source';
 import { createApp } from './app';
 import { env } from './config/env';
+import { autoSeedOnStartup } from './scripts/autoSeed';
 
 async function main() {
   try {
     await AppDataSource.initialize();
     // eslint-disable-next-line no-console
     console.log('Database connection established.');
+
+    // Auto-run pending database migrations in production
+    // eslint-disable-next-line no-console
+    console.log('Running database migrations...');
+    await AppDataSource.runMigrations();
+    // eslint-disable-next-line no-console
+    console.log('Database migrations completed.');
+
+    // Auto-seed default Admin, Plans, Categories, and Locations
+    await autoSeedOnStartup();
   } catch (err) {
     // eslint-disable-next-line no-console
-    console.error('Failed to connect to the database:', err);
+    console.error('Failed to initialize database/migrations:', err);
     process.exit(1);
   }
 
