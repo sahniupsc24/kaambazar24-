@@ -35,6 +35,7 @@ export interface Job {
   workType: string;
   compensationType: string;
   compensationRate: string;
+  openings?: number | null;
   status: string;
   createdAt: string;
   isFeatured?: boolean;
