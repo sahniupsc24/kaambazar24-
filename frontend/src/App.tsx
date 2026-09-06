@@ -30,6 +30,7 @@ import { EmployerWorkerSearchPage } from './pages/employer/EmployerWorkerSearchP
 
 // Admin pages
 import { AdminDashboardPage } from './pages/admin/AdminDashboardPage';
+import { AdminLoginPage } from './pages/admin/AdminLoginPage';
 import { AdminUsersPage } from './pages/admin/AdminUsersPage';
 import { AdminUserDetailPage } from './pages/admin/AdminUserDetailPage';
 import { AdminJobsPage } from './pages/admin/AdminJobsPage';
@@ -96,6 +97,7 @@ export default function App() {
             <Route path="/jobs/:id" element={<JobDetailsPage />} />
             <Route path="/pricing" element={<PricingPage />} />
             <Route path="/login" element={<LoginPage />} />
+            <Route path="/admin/login" element={<AdminLoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
 
             {/* ── Legal ── */}
