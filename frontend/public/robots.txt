@@ -1,0 +1,36 @@
+User-agent: *
+Allow: /
+Allow: /jobs
+Allow: /jobs/*
+Allow: /about
+Allow: /contact
+Allow: /privacy-policy
+Allow: /terms
+Disallow: /admin/
+Disallow: /worker/
+Disallow: /employer/
+Disallow: /api/
+
+# AI Search & LLM Bots (Explicitly Allowed for AI SEO)
+User-agent: GPTBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+User-agent: ByteSpider
+Allow: /
+
+User-agent: CCBot
+Allow: /
+
+Sitemap: /sitemap.xml

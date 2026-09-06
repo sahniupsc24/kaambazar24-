@@ -1,0 +1,1353 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Workforce Marketplace — Workflow Preview</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#17222b; --paper:#f6f4ee; --panel:#ffffff; --line:#e2ddd0;
+    --indigo:#1c3a4b; --saffron:#e0873c; --saffron-dark:#c26f28;
+    --green:#1f7a5c; --red:#b3432f; --muted:#6b6459;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{background:var(--paper); color:var(--ink); font-family:'Inter',-apple-system,sans-serif; line-height:1.5;}
+  h1,h2,h3,h4{font-family:'Manrope',sans-serif; margin:0; letter-spacing:-0.01em;}
+  a{color:inherit;} button{font-family:inherit;}
+
+  .topbar{display:flex; align-items:center; justify-content:space-between; padding:16px 32px; border-bottom:1px solid var(--line); background:var(--panel); flex-wrap:wrap; gap:12px;}
+  .brand{display:flex; align-items:center; gap:10px;}
+  .brand .mark{width:30px; height:30px; border-radius:7px; background:var(--indigo); display:flex; align-items:center; justify-content:center; color:var(--saffron); font-weight:800; font-family:'Manrope',sans-serif; font-size:15px;}
+  .brand span{font-weight:800; font-size:17px;}
+  .role-switch{display:flex; gap:6px; background:var(--paper); padding:4px; border-radius:10px; border:1px solid var(--line);}
+  .role-switch button{border:none; background:transparent; padding:8px 16px; border-radius:8px; font-weight:600; font-size:13.5px; color:var(--muted); cursor:pointer;}
+  .role-switch button.active{background:var(--indigo); color:#fff;}
+
+  .hero{padding:28px 32px 4px; max-width:1120px; margin:0 auto;}
+  .hero h1{font-size:24px; max-width:680px;}
+  .hero p{color:var(--muted); max-width:640px; margin-top:8px; font-size:14px;}
+
+  .stepper{display:flex; overflow-x:auto; gap:0; margin:20px auto 0; max-width:1120px; padding:0 32px 4px;}
+  .step{flex:0 0 auto; display:flex; align-items:center; gap:10px; padding:10px 18px 10px 0;}
+  .step .num{width:26px; height:26px; border-radius:50%; border:1.5px solid var(--line); display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:700; color:var(--muted); background:var(--panel); flex-shrink:0;}
+  .step.done .num{background:var(--green); border-color:var(--green); color:#fff;}
+  .step.current .num{background:var(--saffron); border-color:var(--saffron); color:#fff;}
+  .step label{font-size:12px; color:var(--muted); white-space:nowrap; font-weight:600;}
+  .step.done label, .step.current label{color:var(--ink);}
+  .step:not(:last-child)::after{content:''; width:20px; height:1.5px; background:var(--line); margin:0 2px;}
+  .step.done:not(:last-child)::after{background:var(--green);}
+
+  .wrap{max-width:1120px; margin:0 auto; padding:20px 32px 80px;}
+  .panel{background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:20px; margin-bottom:16px;}
+  .grid2{display:grid; grid-template-columns:1fr 1fr; gap:16px;}
+  .grid3{display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px;}
+  @media (max-width:760px){ .grid2,.grid3{grid-template-columns:1fr;} .topbar{flex-direction:column; align-items:stretch;} .role-switch{justify-content:center;} }
+
+  .section-title{font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); margin-bottom:12px;}
+  .subhead{font-size:14px; font-weight:700; margin:16px 0 8px;}
+  .subhead:first-child{margin-top:0;}
+
+  .card{border:1px solid var(--line); border-radius:12px; padding:14px 16px; background:var(--paper); margin-bottom:10px;}
+  .card:last-child{margin-bottom:0;}
+  .card-row{display:flex; justify-content:space-between; align-items:flex-start; gap:12px;}
+  .card h4{font-size:15px; margin-bottom:3px;}
+  .card .meta{font-size:13px; color:var(--muted);}
+
+  .badge{display:inline-block; padding:3px 10px; border-radius:999px; font-size:11.5px; font-weight:700; color:#fff; white-space:nowrap;}
+  .b-open,.b-approved,.b-paid,.b-active,.b-completed{background:var(--green);}
+  .b-submitted,.b-processing,.b-sent,.b-accepted{background:#3564a8;}
+  .b-pending,.b-draft,.b-correcting{background:var(--saffron-dark);}
+  .b-rejected,.b-failed,.b-terminated,.b-closed{background:var(--red);}
+  .b-featured{background:var(--saffron);}
+  .chip{display:inline-block; padding:3px 10px; border-radius:999px; font-size:11.5px; font-weight:600; color:var(--indigo); background:#e7edf0; margin:2px 4px 2px 0;}
+  .v-badge{background:#0f766e14; color:var(--green); border:1px solid #0f766e40; padding:2px 8px; border-radius:999px; font-size:11px; font-weight:700; display:inline-flex; align-items:center; gap:3px;}
+
+  .btn{border:none; border-radius:8px; padding:9px 15px; font-weight:700; font-size:13.5px; cursor:pointer; display:inline-flex; align-items:center; gap:6px;}
+  .btn:disabled{opacity:.4; cursor:not-allowed;}
+  .btn-primary{background:var(--indigo); color:#fff;}
+  .btn-primary:hover:not(:disabled){filter:brightness(1.15);}
+  .btn-accent{background:var(--saffron); color:#fff;}
+  .btn-accent:hover:not(:disabled){filter:brightness(1.08);}
+  .btn-ghost{background:transparent; border:1px solid var(--line); color:var(--ink);}
+  .btn-ghost:hover:not(:disabled){background:#eee9db;}
+  .btn-danger{background:transparent; border:1px solid var(--red); color:var(--red);}
+  .btn-sm{padding:6px 11px; font-size:12.5px;}
+  .btn-row{display:flex; gap:8px; margin-top:10px; flex-wrap:wrap;}
+
+  .empty{text-align:center; padding:24px 16px; color:var(--muted); font-size:13.5px; border:1.5px dashed var(--line); border-radius:12px;}
+  .lock-note{color:#8a5a1f; font-size:13px; padding:12px 14px; background:#fff8ec; border:1px dashed var(--saffron-dark); border-radius:10px; margin-bottom:12px;}
+
+  input,select,textarea{width:100%; padding:9px 11px; border:1px solid var(--line); border-radius:8px; font-size:13.5px; font-family:inherit; background:#fff;}
+  label.field{display:block; font-size:12.5px; font-weight:600; color:var(--muted); margin-bottom:4px; margin-top:10px;}
+  label.field:first-child{margin-top:0;}
+
+  .search-bar{display:grid; grid-template-columns:1.4fr 1fr 1fr 1fr; gap:10px;}
+  @media (max-width:760px){ .search-bar{grid-template-columns:1fr 1fr;} }
+
+  .toast{position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:var(--ink); color:#fff; padding:11px 20px; border-radius:10px; font-size:13.5px; font-weight:600; opacity:0; pointer-events:none; transition:opacity .2s, transform .2s; z-index:50;}
+  .toast.show{opacity:1; transform:translateX(-50%) translateY(-4px);}
+
+  .stars{color:var(--saffron); font-size:16px; letter-spacing:2px;}
+  .hidden{display:none !important;}
+  .footer-note{text-align:center; color:var(--muted); font-size:12px; padding:24px; border-top:1px solid var(--line); margin-top:24px;}
+  .tag-list{display:flex; flex-wrap:wrap; gap:8px; margin-top:8px;}
+  .tag-list .tag{background:#fff; border:1px solid var(--line); border-radius:8px; padding:6px 10px; font-size:12.5px; display:flex; align-items:center; gap:8px;}
+  .tag-list .tag button{border:none; background:none; color:var(--red); cursor:pointer; font-weight:800; font-size:13px; padding:0;}
+  .sub-tree{margin-left:14px; padding-left:10px; border-left:2px solid var(--line); margin-top:6px;}
+
+  .contact-line{margin-top:8px; font-size:13.5px; display:flex; align-items:center; gap:8px; flex-wrap:wrap;}
+  .contact-line.unlocked{color:var(--green); font-weight:700;}
+  .contact-line.locked{color:var(--muted);}
+
+  .avail-row{display:flex; align-items:center; gap:10px; margin-bottom:8px; font-size:13px;}
+  .avail-label{width:120px; flex-shrink:0; color:var(--muted); font-weight:600;}
+  .avail-track{flex:1; background:#eee9db; border-radius:999px; height:8px; overflow:hidden;}
+  .avail-fill{background:var(--indigo); height:100%; border-radius:999px;}
+  .avail-count{width:26px; text-align:right; font-weight:700; font-size:13px;}
+
+  .plan-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:12px; margin-top:10px;}
+  .plan-card{border:1px solid var(--line); border-radius:12px; padding:14px; background:#fff; text-align:center;}
+  .plan-card h4{font-size:14px;}
+  .plan-card .price{font-size:20px; font-weight:800; color:var(--indigo); margin:6px 0;}
+  .plan-card .desc{font-size:12px; color:var(--muted); margin-bottom:10px;}
+
+  .my-plan-card{display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; background:#f0fdfa; border:1px solid #b9e3d8; border-radius:12px; padding:14px 16px; margin-bottom:16px;}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand"><div class="mark">W</div><span>Workforce Marketplace</span></div>
+  <div class="role-switch" id="roleSwitch">
+    <button data-role="worker" class="active">Worker / Labor</button>
+    <button data-role="employer">Buyer (Factory/Warehouse/Hotel)</button>
+    <button data-role="admin">Admin</button>
+  </div>
+</div>
+
+<div class="hero">
+  <h1>Registered, verified, contact-gated labor marketplace</h1>
+  <p>Free registration for both sides. Full profile visible to everyone. Mobile number stays masked until the first free unlock is used — after that, a subscription or one-time pack (set by Admin) is required. Nothing here calls a real payment gateway yet — Razorpay comes later.</p>
+</div>
+
+<div class="stepper" id="stepper"></div>
+
+<div class="wrap">
+
+  <!-- ================= WORKER VIEW ================= -->
+  <div id="view-worker">
+
+    <div id="workerRegGate"></div>
+
+    <div id="workerAppArea" class="hidden">
+
+      <div class="my-plan-card" id="workerPlanCard"></div>
+      <div id="workerPlanChooser"></div>
+
+      <div class="panel">
+        <div class="section-title">Jobs available by category</div>
+        <div id="workerAvailability"></div>
+      </div>
+
+      <div class="panel">
+        <div class="section-title">Search jobs</div>
+        <div class="search-bar">
+          <input id="wSearchText" placeholder="Search by job title..." oninput="renderJobList()" />
+          <select id="wSearchCategory" onchange="renderJobList()"><option value="">All categories</option></select>
+          <select id="wSearchState" onchange="onWorkerStateChange()"><option value="">All states</option></select>
+          <select id="wSearchCity" onchange="renderJobList()"><option value="">All cities</option></select>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="section-title">Matching jobs</div>
+        <div id="jobList"></div>
+      </div>
+
+      <div class="panel">
+        <div class="section-title">My application & contract</div>
+        <div id="workerFlow"></div>
+      </div>
+
+      <div class="panel">
+        <div class="section-title">My work log (once contract is active)</div>
+        <div id="workerWorkLog"></div>
+      </div>
+
+      <div class="panel">
+        <div class="section-title">My payments</div>
+        <div id="workerPayments"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= EMPLOYER / BUYER VIEW ================= -->
+  <div id="view-employer" class="hidden">
+
+    <div id="buyerRegGate"></div>
+
+    <div id="buyerAppArea" class="hidden">
+
+      <div class="my-plan-card" id="buyerPlanCard"></div>
+      <div id="buyerPlanChooser"></div>
+
+      <div class="panel">
+        <div class="section-title">Workers available by category</div>
+        <div id="buyerAvailability"></div>
+      </div>
+
+      <div class="panel">
+        <div class="section-title">Post a job / requirement</div>
+        <label class="field">Job title</label>
+        <input id="jobTitle" value="Warehouse Loader — 2 Openings" />
+        <div class="grid3">
+          <div><label class="field">Category</label><select id="jobCategory"></select></div>
+          <div><label class="field">State</label><select id="jobState" onchange="onEmployerJobStateChange()"></select></div>
+          <div><label class="field">City</label><select id="jobCity"></select></div>
+        </div>
+        <div class="grid2">
+          <div><label class="field">Rate (₹ / day)</label><input id="jobRate" type="number" value="650" /></div>
+          <div><label class="field">Aadhaar for this job?</label>
+            <select id="jobAadhaarPref">
+              <option value="no">Not required</option>
+              <option value="yes">Required (mandatory)</option>
+            </select>
+          </div>
+        </div>
+        <label style="display:flex; align-items:center; gap:8px; margin-top:12px; font-size:13.5px;">
+          <input type="checkbox" id="jobFeatured" style="width:auto;" />
+          <span id="featuredLabel">Feature this job at the top of search results</span>
+        </label>
+        <div class="btn-row"><button class="btn btn-primary" onclick="postJob()">Post job</button></div>
+      </div>
+
+      <div class="panel">
+        <div class="section-title">My posted jobs</div>
+        <div id="employerJobList"></div>
+      </div>
+
+      <div class="panel">
+        <div class="section-title">Search workers — find labor for your warehouse, factory or shop</div>
+        <div class="search-bar">
+          <input id="bSearchText" placeholder="Search by name or skill..." oninput="renderWorkerSearch()" />
+          <select id="bSearchCategory" onchange="renderWorkerSearch()"><option value="">All categories</option></select>
+          <select id="bSearchState" onchange="onBuyerStateChange()"><option value="">All states</option></select>
+          <select id="bSearchCity" onchange="renderWorkerSearch()"><option value="">All cities</option></select>
+        </div>
+        <div id="workerSearchResults" style="margin-top:14px;"></div>
+      </div>
+
+      <div class="panel">
+        <div class="section-title">Applicants for selected job</div>
+        <div id="employerApplicants"></div>
+      </div>
+
+      <div class="panel">
+        <div class="section-title">Contract</div>
+        <div id="employerContract"></div>
+      </div>
+
+      <div class="panel">
+        <div class="section-title">Review submitted work</div>
+        <div id="employerWorkReview"></div>
+      </div>
+
+      <div class="panel">
+        <div class="section-title">Settle payment</div>
+        <div id="employerPayment"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= ADMIN VIEW ================= -->
+  <div id="view-admin" class="hidden">
+
+    <div class="panel">
+      <div class="section-title">Categories</div>
+      <div style="display:flex; gap:8px;">
+        <input id="newCategory" placeholder="e.g. Construction" />
+        <button class="btn btn-primary" style="flex-shrink:0;" onclick="addCategory()">Add category</button>
+      </div>
+      <div class="tag-list" id="categoryList"></div>
+    </div>
+
+    <div class="panel">
+      <div class="section-title">States & cities</div>
+      <div class="subhead">Add a state</div>
+      <div style="display:flex; gap:8px;">
+        <input id="newState" placeholder="e.g. Maharashtra" />
+        <button class="btn btn-primary" style="flex-shrink:0;" onclick="addState()">Add state</button>
+      </div>
+      <div class="subhead">Add a city</div>
+      <div class="grid3">
+        <select id="cityStateSelect"></select>
+        <input id="newCity" placeholder="e.g. Pune" />
+        <button class="btn btn-primary" onclick="addCity()">Add city</button>
+      </div>
+      <div class="subhead">Location tree</div>
+      <div id="locationTree"></div>
+    </div>
+
+    <div class="panel">
+      <div class="section-title">Subscription & contact-unlock plans</div>
+      <p class="meta">These plans control what Worker and Buyer see when they run out of free unlocks. Prices/duration are fully editable here — nothing is hardcoded in the app.</p>
+      <div class="grid3">
+        <select id="newPlanRole"><option value="worker">Worker plan</option><option value="buyer">Buyer plan</option></select>
+        <select id="newPlanType" onchange="toggleplanFields()"><option value="onetime">One-time pack</option><option value="subscription">Subscription</option></select>
+        <input id="newPlanName" placeholder="Plan name" />
+      </div>
+      <div class="grid3" style="margin-top:8px;">
+        <input id="newPlanPrice" type="number" placeholder="Price (₹)" />
+        <input id="newPlanContacts" type="number" placeholder="Contacts included" />
+        <input id="newPlanDays" type="number" placeholder="Duration (days)" class="hidden" />
+      </div>
+      <div class="btn-row"><button class="btn btn-primary" onclick="addPlan()">Add plan</button></div>
+
+      <div class="subhead">Worker plans</div>
+      <div id="workerPlansAdmin" class="plan-grid"></div>
+      <div class="subhead">Buyer plans</div>
+      <div id="buyerPlansAdmin" class="plan-grid"></div>
+    </div>
+
+    <div class="panel">
+      <div class="section-title">Featured listing price</div>
+      <p class="meta">Buyers pay this to pin a job to the top of worker search results for 7 days.</p>
+      <div style="display:flex; gap:8px; max-width:280px;">
+        <input id="featuredPriceInput" type="number" />
+        <button class="btn btn-primary" style="flex-shrink:0;" onclick="saveFeaturedPrice()">Save</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="section-title">Aadhaar requirement per job</div>
+      <p class="meta">Buyer sets a preference when posting a job. Admin has final control here and can override any job to Mandatory or Optional at any time — e.g. if a buyer later requests a change via support.</p>
+      <div id="aadhaarJobsAdmin"></div>
+    </div>
+
+    <div class="panel">
+      <div class="section-title">Verification queue</div>
+      <p class="meta">Demo shows your own Worker/Buyer session profiles — in production every registered user would appear here for ID/business-proof review.</p>
+      <div id="verificationQueue"></div>
+    </div>
+
+    <div class="panel">
+      <div class="section-title">Platform activity — read-only oversight</div>
+      <div id="adminLog"></div>
+    </div>
+
+    <div class="panel">
+      <div class="section-title">Ratings & reputation</div>
+      <div id="adminRatings"></div>
+    </div>
+  </div>
+
+</div>
+
+<div class="footer-note">Local browser demo · no data leaves this page · payments are simulated (Razorpay integration pending) · refresh to reset</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const state = {
+  taxonomy: {
+    categories: ['Delivery', 'Construction', 'Domestic Work', 'Retail', 'Hospitality'],
+    states: ['Maharashtra', 'Karnataka', 'Delhi NCR', 'Gujarat'],
+    citiesByState: {
+      'Maharashtra': ['Pune', 'Mumbai', 'Nagpur'],
+      'Karnataka': ['Bengaluru', 'Mysuru'],
+      'Delhi NCR': ['New Delhi', 'Gurugram', 'Noida'],
+      'Gujarat': ['Ahmedabad', 'Surat'],
+    },
+  },
+
+  plans: {
+    worker: [
+      { id: 1, name: 'Single Contact', type: 'onetime', price: 49, contacts: 1 },
+      { id: 2, name: '5 Contacts Pack', type: 'onetime', price: 199, contacts: 5 },
+      { id: 3, name: 'Monthly Unlimited', type: 'subscription', price: 299, days: 30 },
+    ],
+    buyer: [
+      { id: 1, name: 'Single Contact', type: 'onetime', price: 99, contacts: 1 },
+      { id: 2, name: '10 Contacts Pack', type: 'onetime', price: 499, contacts: 10 },
+      { id: 3, name: 'Monthly Unlimited', type: 'subscription', price: 999, days: 30 },
+    ],
+  },
+  planSeq: { worker: 4, buyer: 4 },
+  featuredListingPrice: 149,
+
+  jobs: [
+    { id: 101, title: 'Loading Staff Needed', category: 'Delivery', state: 'Maharashtra', city: 'Pune', rate: 600, status: 'OPEN', featured: false, buyerName: 'Om Logistics Pvt Ltd', buyerType: 'Warehouse', buyerMobile: '9821345678', buyerVerified: true, aadhaarBuyerPref: 'no', aadhaarAdminOverride: null },
+    { id: 102, title: 'Site Mazdoor — 5 Openings', category: 'Construction', state: 'Delhi NCR', city: 'Gurugram', rate: 700, status: 'OPEN', featured: true, buyerName: 'Shree Constructions', buyerType: 'Factory', buyerMobile: '9911223344', buyerVerified: false, aadhaarBuyerPref: 'yes', aadhaarAdminOverride: null },
+    { id: 103, title: 'Housekeeping Staff', category: 'Hospitality', state: 'Delhi NCR', city: 'New Delhi', rate: 550, status: 'OPEN', featured: false, buyerName: 'Grand Palm Hotel', buyerType: 'Hotel', buyerMobile: '9765432198', buyerVerified: true, aadhaarBuyerPref: 'no', aadhaarAdminOverride: null },
+  ],
+
+  workers: [
+    { id: 1, name: 'Ravi Kumar', category: 'Delivery', state: 'Maharashtra', city: 'Pune', experience: 3, skills: ['Two-wheeler','Package handling'], mobile: '9876543210', verified: true, timesContacted: 0 },
+    { id: 2, name: 'Suresh Yadav', category: 'Construction', state: 'Delhi NCR', city: 'Gurugram', experience: 6, skills: ['Masonry','Scaffolding'], mobile: '9123456780', verified: false, timesContacted: 0 },
+    { id: 3, name: 'Anita Devi', category: 'Domestic Work', state: 'Karnataka', city: 'Bengaluru', experience: 4, skills: ['Cooking','Cleaning'], mobile: '9988776655', verified: true, timesContacted: 0 },
+    { id: 4, name: 'Imran Sheikh', category: 'Retail', state: 'Gujarat', city: 'Ahmedabad', experience: 2, skills: ['Billing','Inventory'], mobile: '9871122334', verified: false, timesContacted: 0 },
+    { id: 5, name: 'Manoj Patil', category: 'Construction', state: 'Maharashtra', city: 'Mumbai', experience: 8, skills: ['Welding','Site supervision'], mobile: '9765098712', verified: true, timesContacted: 0 },
+    { id: 6, name: 'Fatima Sheikh', category: 'Hospitality', state: 'Delhi NCR', city: 'New Delhi', experience: 5, skills: ['Housekeeping','Front desk'], mobile: '9012345678', verified: false, timesContacted: 0 },
+  ],
+  workerSeq: 7,
+  jobSeq: 104,
+
+  currentWorker: null,
+  currentBuyer: null,
+
+  selectedJobId: null,
+  application: null,
+  contract: null,
+  workEntries: [],
+  payments: [],
+  ratings: [],
+  log: [],
+
+  pendingUnlock: null,
+  planChooserOpen: null,
+
+  verifyExpanded: { worker: false, buyer: false },
+  verifyEditing: { worker: false, buyer: false },
+};
+
+let entrySeq = 1, paySeq = 1;
+
+function addLog(action){ state.log.unshift({ action, at: new Date().toLocaleTimeString() }); }
+function toast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(window.__toastTimer);
+  window.__toastTimer = setTimeout(()=>t.classList.remove('show'), 2000);
+}
+function maskMobile(m){ return m.slice(0,5) + '•••••'; }
+function verifiedBadge(v){ return v ? '<span class="v-badge">✓ Verified</span>' : ''; }
+function selectedJob(){ return state.jobs.find(j => j.id === state.selectedJobId) || null; }
+
+/* ============================== Taxonomy admin ============================== */
+function addCategory(){
+  const input = document.getElementById('newCategory');
+  const val = input.value.trim();
+  if (!val) { toast('Enter a category name'); return; }
+  if (state.taxonomy.categories.some(c => c.toLowerCase() === val.toLowerCase())){ toast('Already exists'); return; }
+  state.taxonomy.categories.push(val); input.value='';
+  addLog('Admin added category "' + val + '"'); toast('Category added'); renderAll();
+}
+function removeCategory(name){
+  state.taxonomy.categories = state.taxonomy.categories.filter(c => c !== name);
+  addLog('Admin removed category "' + name + '"'); renderAll();
+}
+function addState(){
+  const input = document.getElementById('newState');
+  const val = input.value.trim();
+  if (!val) { toast('Enter a state name'); return; }
+  if (state.taxonomy.states.some(s => s.toLowerCase() === val.toLowerCase())){ toast('Already exists'); return; }
+  state.taxonomy.states.push(val); state.taxonomy.citiesByState[val] = []; input.value='';
+  addLog('Admin added state "' + val + '"'); toast('State added'); renderAll();
+}
+function removeState(name){
+  state.taxonomy.states = state.taxonomy.states.filter(s => s !== name);
+  delete state.taxonomy.citiesByState[name];
+  addLog('Admin removed state "' + name + '"'); renderAll();
+}
+function addCity(){
+  const stName = document.getElementById('cityStateSelect').value;
+  const input = document.getElementById('newCity');
+  const val = input.value.trim();
+  if (!stName){ toast('Add a state first'); return; }
+  if (!val){ toast('Enter a city name'); return; }
+  const list = state.taxonomy.citiesByState[stName] || (state.taxonomy.citiesByState[stName]=[]);
+  if (list.some(c => c.toLowerCase() === val.toLowerCase())){ toast('Already exists in this state'); return; }
+  list.push(val); input.value='';
+  addLog('Admin added city "' + val + '" under ' + stName); toast('City added'); renderAll();
+}
+function removeCity(stName, cityName){
+  state.taxonomy.citiesByState[stName] = state.taxonomy.citiesByState[stName].filter(c => c !== cityName);
+  addLog('Admin removed city "' + cityName + '" from ' + stName); renderAll();
+}
+function renderAdminTaxonomy(){
+  document.getElementById('categoryList').innerHTML = state.taxonomy.categories.map(function(c){
+    return '<span class="tag">' + c + ' <button onclick="removeCategory(\'' + c.replace(/'/g,"\\'") + '\')">×</button></span>';
+  }).join('') || '<div class="empty" style="margin-top:8px;">No categories yet.</div>';
+
+  document.getElementById('cityStateSelect').innerHTML = state.taxonomy.states.map(function(s){ return '<option value="'+s+'">'+s+'</option>'; }).join('') || '<option value="">Add a state first</option>';
+
+  const tree = document.getElementById('locationTree');
+  tree.innerHTML = state.taxonomy.states.length === 0 ? '<div class="empty">No states yet — add one above.</div>' :
+    state.taxonomy.states.map(function(s){
+      const cities = state.taxonomy.citiesByState[s]||[];
+      return '<div class="card"><div class="card-row"><div><h4>'+s+'</h4><div class="meta">'+cities.length+' cities</div></div>' +
+        '<button class="btn btn-danger btn-sm" onclick="removeState(\''+s.replace(/'/g,"\\'")+'\')">Remove state</button></div>' +
+        '<div class="sub-tree">' + (cities.map(function(c){
+          return '<span class="tag">'+c+' <button onclick="removeCity(\''+s.replace(/'/g,"\\'")+'\',\''+c.replace(/'/g,"\\'")+'\')">×</button></span>';
+        }).join('') || '<span class="meta">No cities yet.</span>') + '</div></div>';
+    }).join('');
+}
+
+function fillCategoryDropdowns(){
+  document.querySelectorAll('[data-fill="categories"]').forEach(function(sel){
+    const prev = sel.value; const includeAll = sel.dataset.includeAll === 'true';
+    sel.innerHTML = (includeAll ? '<option value="">All categories</option>' : '') + state.taxonomy.categories.map(function(c){ return '<option value="'+c+'">'+c+'</option>'; }).join('');
+    if ([...sel.options].some(function(o){ return o.value===prev; })) sel.value = prev;
+  });
+}
+function fillStateDropdowns(){
+  document.querySelectorAll('[data-fill="states"]').forEach(function(sel){
+    const prev = sel.value; const includeAll = sel.dataset.includeAll === 'true';
+    sel.innerHTML = (includeAll ? '<option value="">All states</option>' : '') + state.taxonomy.states.map(function(s){ return '<option value="'+s+'">'+s+'</option>'; }).join('');
+    if ([...sel.options].some(function(o){ return o.value===prev; })) sel.value = prev;
+  });
+}
+function fillCityDropdown(selectEl, stName, includeAll){
+  if (!selectEl) return;
+  const cities = state.taxonomy.citiesByState[stName] || [];
+  const prev = selectEl.value;
+  selectEl.innerHTML = (includeAll ? '<option value="">All cities</option>' : '<option value="">Select city</option>') + cities.map(function(c){ return '<option value="'+c+'">'+c+'</option>'; }).join('');
+  if ([...selectEl.options].some(function(o){ return o.value===prev; })) selectEl.value = prev;
+}
+
+/* ============================== Plans / featured price ============================== */
+function toggleplanFields(){
+  const type = document.getElementById('newPlanType').value;
+  document.getElementById('newPlanContacts').classList.toggle('hidden', type !== 'onetime');
+  document.getElementById('newPlanDays').classList.toggle('hidden', type !== 'subscription');
+}
+function addPlan(){
+  const role = document.getElementById('newPlanRole').value;
+  const type = document.getElementById('newPlanType').value;
+  const name = document.getElementById('newPlanName').value.trim();
+  const price = Number(document.getElementById('newPlanPrice').value);
+  const contacts = Number(document.getElementById('newPlanContacts').value) || 0;
+  const days = Number(document.getElementById('newPlanDays').value) || 0;
+  if (!name || !price){ toast('Enter a plan name and price'); return; }
+  if (type === 'onetime' && !contacts){ toast('Enter how many contacts this pack includes'); return; }
+  if (type === 'subscription' && !days){ toast('Enter the subscription duration in days'); return; }
+
+  const plan = { id: state.planSeq[role]++, name: name, type: type, price: price, contacts: contacts, days: days };
+  state.plans[role].push(plan);
+  document.getElementById('newPlanName').value=''; document.getElementById('newPlanPrice').value='';
+  document.getElementById('newPlanContacts').value=''; document.getElementById('newPlanDays').value='';
+  addLog('Admin added ' + role + ' plan "' + name + '" (₹' + price + ')'); toast('Plan added'); renderAll();
+}
+function removePlan(role, id){
+  state.plans[role] = state.plans[role].filter(function(p){ return p.id !== id; });
+  addLog('Admin removed a ' + role + ' plan'); renderAll();
+}
+function renderPlansAdmin(){
+  ['worker','buyer'].forEach(function(role){
+    const el = document.getElementById(role+'PlansAdmin');
+    if (!el) return;
+    el.innerHTML = state.plans[role].length === 0 ? '<div class="empty">No plans yet.</div>' :
+      state.plans[role].map(function(p){
+        const desc = p.type === 'onetime' ? (p.contacts + ' contact' + (p.contacts>1?'s':'')) : ('Unlimited · ' + p.days + ' days');
+        return '<div class="plan-card"><h4>'+p.name+'</h4><div class="price">₹'+p.price+'</div><div class="desc">'+desc+'</div>' +
+          '<button class="btn btn-danger btn-sm" onclick="removePlan(\''+role+'\','+p.id+')">Remove</button></div>';
+      }).join('');
+  });
+}
+function saveFeaturedPrice(){
+  const val = Number(document.getElementById('featuredPriceInput').value);
+  if (!val){ toast('Enter a valid price'); return; }
+  state.featuredListingPrice = val;
+  addLog('Admin set featured listing price to ₹' + val); toast('Featured listing price updated'); renderAll();
+}
+
+/* ============================== Aadhaar (job-level, admin overrides buyer) ============================== */
+function aadhaarRequired(job){
+  if (job.aadhaarAdminOverride === 'mandatory') return true;
+  if (job.aadhaarAdminOverride === 'optional') return false;
+  return job.aadhaarBuyerPref === 'yes';
+}
+function aadhaarStatusLabel(job){
+  if (job.aadhaarAdminOverride === 'mandatory') return 'Mandatory (Admin override)';
+  if (job.aadhaarAdminOverride === 'optional') return 'Not required (Admin override)';
+  return job.aadhaarBuyerPref === 'yes' ? 'Mandatory (Buyer)' : 'Not required (Buyer)';
+}
+function setJobAadhaarOverride(jobId, value){
+  const job = state.jobs.find(function(j){ return j.id === jobId; });
+  if (!job) return;
+  job.aadhaarAdminOverride = value || null;
+  addLog('Admin set Aadhaar rule for "' + job.title + '" to ' + (value || "use buyer's preference"));
+  toast('Aadhaar setting updated'); renderAll();
+}
+function renderAadhaarAdmin(){
+  const el = document.getElementById('aadhaarJobsAdmin');
+  if (state.jobs.length === 0){ el.innerHTML = '<div class="empty">No jobs posted yet.</div>'; return; }
+  el.innerHTML = state.jobs.map(function(j){
+    const effective = aadhaarRequired(j);
+    return '<div class="card"><div class="card-row"><div><h4>' + j.title + '</h4>' +
+      '<div class="meta">' + j.buyerName + ' · ' + j.category + ' · ' + j.city + ', ' + j.state + '</div>' +
+      '<div class="meta">Buyer\'s preference: ' + (j.aadhaarBuyerPref === 'yes' ? 'Wants Aadhaar' : 'No Aadhaar needed') + '</div></div>' +
+      '<span class="badge ' + (effective ? 'b-rejected' : 'b-open') + '">' + (effective ? 'Required' : 'Not Required') + '</span></div>' +
+      '<div class="btn-row"><select onchange="setJobAadhaarOverride(' + j.id + ', this.value)" style="max-width:240px;">' +
+      '<option value="" ' + (!j.aadhaarAdminOverride ? 'selected' : '') + '>Use buyer\'s choice</option>' +
+      '<option value="mandatory" ' + (j.aadhaarAdminOverride==='mandatory' ? 'selected' : '') + '>Force Mandatory</option>' +
+      '<option value="optional" ' + (j.aadhaarAdminOverride==='optional' ? 'selected' : '') + '>Force Optional (Off)</option>' +
+      '</select></div></div>';
+  }).join('');
+}
+
+/* ============================== Verification queue (view / edit / toggle) ============================== */
+function approveVerification(role){
+  const profile = role==='worker' ? state.currentWorker : state.currentBuyer;
+  if (!profile) return;
+  profile.verified = true; profile.verificationNote = null;
+  if (role==='worker'){ const dir = state.workers.find(function(w){ return w.id==='me'; }); if (dir) dir.verified = true; }
+  else { state.jobs.forEach(function(j){ if (j.buyerName === state.currentBuyer.businessName) j.buyerVerified = true; }); }
+  const label = role==='worker' ? profile.name : profile.businessName;
+  addLog('Admin approved verification for ' + label); toast('Verified'); renderAll();
+}
+function removeVerification(role){
+  const reason = prompt('Reason for removing verification (e.g. refund/dispute case):');
+  if (reason === null) return;
+  const profile = role==='worker' ? state.currentWorker : state.currentBuyer;
+  if (!profile) return;
+  profile.verified = false; profile.verificationNote = reason || 'No reason given';
+  if (role==='worker'){ const dir = state.workers.find(function(w){ return w.id==='me'; }); if (dir) dir.verified = false; }
+  else { state.jobs.forEach(function(j){ if (j.buyerName === state.currentBuyer.businessName) j.buyerVerified = false; }); }
+  const label = role==='worker' ? profile.name : profile.businessName;
+  addLog('Admin removed verification for ' + label + ' — reason: "' + reason + '"'); toast('Verification removed'); renderAll();
+}
+function saveWorkerEdit(){
+  const w = state.currentWorker;
+  w.name = document.getElementById('editWorkerName').value.trim() || w.name;
+  w.mobile = document.getElementById('editWorkerMobile').value.trim() || w.mobile;
+  w.category = document.getElementById('editWorkerCategory').value || w.category;
+  w.experience = Number(document.getElementById('editWorkerExperience').value) || 0;
+  w.skills = document.getElementById('editWorkerSkills').value.split(',').map(function(s){return s.trim();}).filter(Boolean);
+  w.state = document.getElementById('editWorkerState').value || w.state;
+  w.city = document.getElementById('editWorkerCity').value || w.city;
+  const dir = state.workers.find(function(x){ return x.id==='me'; });
+  if (dir){ dir.name=w.name; dir.mobile=w.mobile; dir.category=w.category; dir.experience=w.experience; dir.skills=w.skills; dir.state=w.state; dir.city=w.city; dir.verified=w.verified; }
+  state.verifyEditing.worker = false;
+  addLog('Admin edited worker profile ("' + w.name + '")'); toast('Worker profile updated'); renderAll();
+}
+function saveBuyerEdit(){
+  const b = state.currentBuyer;
+  const oldName = b.businessName;
+  b.businessName = document.getElementById('editBuyerBusiness').value.trim() || b.businessName;
+  b.businessType = document.getElementById('editBuyerType').value || b.businessType;
+  b.contactPerson = document.getElementById('editBuyerContact').value.trim() || b.contactPerson;
+  b.mobile = document.getElementById('editBuyerMobile').value.trim() || b.mobile;
+  b.state = document.getElementById('editBuyerState').value || b.state;
+  b.city = document.getElementById('editBuyerCity').value || b.city;
+  state.jobs.forEach(function(j){
+    if (j.buyerName === oldName){ j.buyerName = b.businessName; j.buyerType = b.businessType; j.buyerMobile = b.mobile; j.buyerVerified = b.verified; }
+  });
+  state.verifyEditing.buyer = false;
+  addLog('Admin edited buyer profile ("' + b.businessName + '")'); toast('Buyer profile updated'); renderAll();
+}
+function renderVerifyCard(role){
+  const profile = role==='worker' ? state.currentWorker : state.currentBuyer;
+  const label = role==='worker' ? profile.name : profile.businessName;
+  const sub = role==='worker' ? (profile.category+' · '+profile.city+', '+profile.state) : (profile.businessType+' · '+profile.city+', '+profile.state);
+  const expanded = state.verifyExpanded[role];
+  const editing = state.verifyEditing[role];
+
+  let statsHtml = '';
+  if (expanded && !editing){
+    if (role==='worker'){
+      const ratingsReceived = state.ratings.filter(function(r){ return r.to.indexOf(profile.name) !== -1; });
+      statsHtml = '<div class="sub-tree">' +
+        '<div class="meta">Mobile: ' + profile.mobile + '</div>' +
+        '<div class="meta">Experience: ' + profile.experience + ' yrs</div>' +
+        '<div class="meta">Skills: ' + (profile.skills.join(', ') || '—') + '</div>' +
+        '<div class="meta">Aadhaar: ' + (profile.aadhaar ? ('Submitted (•••• •••• ' + profile.aadhaar.slice(-4) + ')') : 'Not submitted') + '</div>' +
+        '<div class="meta">Applications this session: ' + (state.application ? 1 : 0) + '</div>' +
+        '<div class="meta">Contract status: ' + (state.contract ? state.contract.status : 'None yet') + '</div>' +
+        '<div class="meta">Ratings received: ' + ratingsReceived.length + '</div>' +
+        '<div class="meta">Times contact unlocked by buyers: ' + (profile.timesContacted || 0) + '</div>' +
+        (profile.verificationNote ? ('<div class="meta">Last verification note: "' + profile.verificationNote + '"</div>') : '') +
+        '</div>';
+    } else {
+      const myJobs = state.jobs.filter(function(j){ return j.buyerName === profile.businessName; });
+      statsHtml = '<div class="sub-tree">' +
+        '<div class="meta">Mobile: ' + profile.mobile + '</div>' +
+        '<div class="meta">Contact person: ' + profile.contactPerson + '</div>' +
+        '<div class="meta">Jobs posted: ' + myJobs.length + '</div>' +
+        '<div class="meta">Featured jobs: ' + myJobs.filter(function(j){ return j.featured; }).length + '</div>' +
+        '<div class="meta">Total simulated spend: ₹' + (profile.totalSpend || 0) + '</div>' +
+        '<div class="meta">Contract status: ' + (state.contract ? state.contract.status : 'None yet') + '</div>' +
+        (profile.verificationNote ? ('<div class="meta">Last verification note: "' + profile.verificationNote + '"</div>') : '') +
+        '</div>';
+    }
+  }
+
+  let editHtml = '';
+  if (editing){
+    if (role==='worker'){
+      editHtml = '<div class="sub-tree">' +
+        '<label class="field">Full name</label><input id="editWorkerName" value="' + profile.name + '" />' +
+        '<label class="field">Mobile</label><input id="editWorkerMobile" value="' + profile.mobile + '" maxlength="10" />' +
+        '<div class="grid3"><div><label class="field">Category</label><select id="editWorkerCategory" data-fill="categories" data-include-all="false"></select></div>' +
+        '<div><label class="field">Experience</label><input id="editWorkerExperience" type="number" value="' + profile.experience + '" /></div>' +
+        '<div><label class="field">Skills</label><input id="editWorkerSkills" value="' + profile.skills.join(', ') + '" /></div></div>' +
+        '<div class="grid2"><div><label class="field">State</label><select id="editWorkerState" data-fill="states" data-include-all="false" onchange="fillCityDropdown(document.getElementById(\'editWorkerCity\'), this.value, false)"></select></div>' +
+        '<div><label class="field">City</label><select id="editWorkerCity"></select></div></div>' +
+        '<div class="btn-row"><button class="btn btn-primary btn-sm" onclick="saveWorkerEdit()">Save changes</button>' +
+        '<button class="btn btn-ghost btn-sm" onclick="state.verifyEditing.worker=false; renderAll();">Cancel</button></div></div>';
+    } else {
+      const types = ['Factory','Warehouse','Hotel','Shop / Dukan','Restaurant','Construction Site','Other'];
+      editHtml = '<div class="sub-tree">' +
+        '<div class="grid2"><div><label class="field">Business name</label><input id="editBuyerBusiness" value="' + profile.businessName + '" /></div>' +
+        '<div><label class="field">Business type</label><select id="editBuyerType">' +
+        types.map(function(t){ return '<option ' + (t===profile.businessType?'selected':'') + '>' + t + '</option>'; }).join('') + '</select></div></div>' +
+        '<div class="grid2"><div><label class="field">Contact person</label><input id="editBuyerContact" value="' + profile.contactPerson + '" /></div>' +
+        '<div><label class="field">Mobile</label><input id="editBuyerMobile" value="' + profile.mobile + '" maxlength="10" /></div></div>' +
+        '<div class="grid2"><div><label class="field">State</label><select id="editBuyerState" data-fill="states" data-include-all="false" onchange="fillCityDropdown(document.getElementById(\'editBuyerCity\'), this.value, false)"></select></div>' +
+        '<div><label class="field">City</label><select id="editBuyerCity"></select></div></div>' +
+        '<div class="btn-row"><button class="btn btn-primary btn-sm" onclick="saveBuyerEdit()">Save changes</button>' +
+        '<button class="btn btn-ghost btn-sm" onclick="state.verifyEditing.buyer=false; renderAll();">Cancel</button></div></div>';
+    }
+  }
+
+  return '<div class="card"><div class="card-row"><div><h4>' + label + ' <span class="meta">(' + (role==='worker'?'Worker':'Buyer — '+profile.businessType) + ')</span></h4>' +
+    '<div class="meta">' + sub + '</div></div>' + verifiedBadge(profile.verified) + '</div>' +
+    '<div class="btn-row">' +
+    '<button class="btn btn-ghost btn-sm" onclick="state.verifyExpanded.' + role + '=!state.verifyExpanded.' + role + '; renderAll();">' + (expanded?'Hide details':'View full profile') + '</button>' +
+    '<button class="btn btn-ghost btn-sm" onclick="state.verifyEditing.' + role + '=!state.verifyEditing.' + role + '; state.verifyExpanded.' + role + '=true; renderAll();">' + (editing?'Close edit':'Edit') + '</button>' +
+    (profile.verified
+      ? '<button class="btn btn-danger btn-sm" onclick="removeVerification(\''+role+'\')">Remove verification</button>'
+      : '<button class="btn btn-primary btn-sm" onclick="approveVerification(\''+role+'\')">Approve verification</button>') +
+    '</div>' + statsHtml + editHtml + '</div>';
+}
+function renderVerificationQueue(){
+  const el = document.getElementById('verificationQueue');
+  let html = '';
+  if (state.currentWorker) html += renderVerifyCard('worker');
+  if (state.currentBuyer) html += renderVerifyCard('buyer');
+  el.innerHTML = html || '<div class="empty">No one has registered yet.</div>';
+
+  if (state.verifyEditing.worker && state.currentWorker){
+    fillCategoryDropdowns(); fillStateDropdowns();
+    const catSel = document.getElementById('editWorkerCategory'); if (catSel) catSel.value = state.currentWorker.category;
+    const stSel = document.getElementById('editWorkerState'); if (stSel) stSel.value = state.currentWorker.state;
+    fillCityDropdown(document.getElementById('editWorkerCity'), state.currentWorker.state, false);
+    const citySel = document.getElementById('editWorkerCity'); if (citySel) citySel.value = state.currentWorker.city;
+  }
+  if (state.verifyEditing.buyer && state.currentBuyer){
+    fillStateDropdowns();
+    const stSel = document.getElementById('editBuyerState'); if (stSel) stSel.value = state.currentBuyer.state;
+    fillCityDropdown(document.getElementById('editBuyerCity'), state.currentBuyer.state, false);
+    const citySel = document.getElementById('editBuyerCity'); if (citySel) citySel.value = state.currentBuyer.city;
+  }
+}
+
+/* ============================== Registration ============================== */
+function renderWorkerRegGate(){
+  const gate = document.getElementById('workerRegGate');
+  const appArea = document.getElementById('workerAppArea');
+  if (state.currentWorker){ gate.innerHTML = ''; appArea.classList.remove('hidden'); return; }
+  appArea.classList.add('hidden');
+  gate.innerHTML =
+    '<div class="panel"><div class="section-title">Complete your worker profile to continue — free registration</div>' +
+    '<label class="field">Full name</label><input id="regWorkerName" placeholder="e.g. Ravi Kumar" />' +
+    '<label class="field">Mobile number</label><input id="regWorkerMobile" placeholder="10-digit mobile number" maxlength="10" />' +
+    '<div class="grid3"><div><label class="field">Category (what work you do)</label><select id="regWorkerCategory" data-fill="categories" data-include-all="false"></select></div>' +
+    '<div><label class="field">Experience (years)</label><input id="regWorkerExperience" type="number" min="0" value="1" /></div>' +
+    '<div><label class="field">Skills (comma-separated)</label><input id="regWorkerSkills" placeholder="e.g. Loading, Two-wheeler" /></div></div>' +
+    '<div class="grid2"><div><label class="field">State</label><select id="regWorkerState" data-fill="states" data-include-all="false" onchange="fillCityDropdown(document.getElementById(\'regWorkerCity\'), this.value, false)"></select></div>' +
+    '<div><label class="field">City</label><select id="regWorkerCity"></select></div></div>' +
+    '<div class="btn-row"><button class="btn btn-primary" onclick="submitWorkerRegistration()">Complete registration — it\'s free</button></div></div>';
+  fillCategoryDropdowns(); fillStateDropdowns();
+  fillCityDropdown(document.getElementById('regWorkerCity'), document.getElementById('regWorkerState').value, false);
+}
+function submitWorkerRegistration(){
+  const name = document.getElementById('regWorkerName').value.trim();
+  const mobile = document.getElementById('regWorkerMobile').value.trim();
+  const category = document.getElementById('regWorkerCategory').value;
+  const experience = Number(document.getElementById('regWorkerExperience').value) || 0;
+  const skills = document.getElementById('regWorkerSkills').value.split(',').map(function(s){return s.trim();}).filter(Boolean);
+  const st = document.getElementById('regWorkerState').value;
+  const city = document.getElementById('regWorkerCity').value;
+
+  if (!name){ toast('Enter your full name'); return; }
+  if (!/^\d{10}$/.test(mobile)){ toast('Enter a valid 10-digit mobile number'); return; }
+  if (!category){ toast('Select a category (admin must add one first)'); return; }
+  if (!st || !city){ toast('Select your state and city (admin must add these first)'); return; }
+
+  state.currentWorker = {
+    name: name, mobile: mobile, category: category, experience: experience, skills: skills, state: st, city: city,
+    verified: false, usedFreeUnlock: false, credits: 0, subscriptionExpiresAt: null, unlockedContacts: [],
+    aadhaar: null, timesContacted: 0, verificationNote: null,
+  };
+  state.workers = state.workers.filter(function(w){ return w.id !== 'me'; });
+  state.workers.push({ id:'me', name: name, category: category, state: st, city: city, experience: experience, skills: skills, mobile: mobile, verified:false, timesContacted: 0 });
+
+  addLog('Worker "' + name + '" registered'); toast('Registration complete — welcome!'); renderAll();
+}
+
+function renderBuyerRegGate(){
+  const gate = document.getElementById('buyerRegGate');
+  const appArea = document.getElementById('buyerAppArea');
+  if (state.currentBuyer){ gate.innerHTML = ''; appArea.classList.remove('hidden'); return; }
+  appArea.classList.add('hidden');
+  gate.innerHTML =
+    '<div class="panel"><div class="section-title">Complete your business profile to continue — free registration</div>' +
+    '<div class="grid2"><div><label class="field">Business name</label><input id="regBuyerBusiness" placeholder="e.g. Om Logistics Pvt Ltd" /></div>' +
+    '<div><label class="field">Business type</label><select id="regBuyerType"><option>Factory</option><option>Warehouse</option><option>Hotel</option><option>Shop / Dukan</option><option>Restaurant</option><option>Construction Site</option><option>Other</option></select></div></div>' +
+    '<div class="grid2"><div><label class="field">Contact person name</label><input id="regBuyerContact" placeholder="e.g. Suresh Shah" /></div>' +
+    '<div><label class="field">Mobile number</label><input id="regBuyerMobile" placeholder="10-digit mobile number" maxlength="10" /></div></div>' +
+    '<div class="grid2"><div><label class="field">State</label><select id="regBuyerState" data-fill="states" data-include-all="false" onchange="fillCityDropdown(document.getElementById(\'regBuyerCity\'), this.value, false)"></select></div>' +
+    '<div><label class="field">City</label><select id="regBuyerCity"></select></div></div>' +
+    '<div class="btn-row"><button class="btn btn-primary" onclick="submitBuyerRegistration()">Complete registration — it\'s free</button></div></div>';
+  fillStateDropdowns();
+  fillCityDropdown(document.getElementById('regBuyerCity'), document.getElementById('regBuyerState').value, false);
+}
+function submitBuyerRegistration(){
+  const businessName = document.getElementById('regBuyerBusiness').value.trim();
+  const businessType = document.getElementById('regBuyerType').value;
+  const contactPerson = document.getElementById('regBuyerContact').value.trim();
+  const mobile = document.getElementById('regBuyerMobile').value.trim();
+  const st = document.getElementById('regBuyerState').value;
+  const city = document.getElementById('regBuyerCity').value;
+
+  if (!businessName){ toast('Enter your business name'); return; }
+  if (!contactPerson){ toast('Enter a contact person name'); return; }
+  if (!/^\d{10}$/.test(mobile)){ toast('Enter a valid 10-digit mobile number'); return; }
+  if (!st || !city){ toast('Select your state and city (admin must add these first)'); return; }
+
+  state.currentBuyer = {
+    businessName: businessName, businessType: businessType, contactPerson: contactPerson, mobile: mobile, state: st, city: city,
+    verified: false, usedFreeUnlock: false, credits: 0, subscriptionExpiresAt: null, unlockedContacts: [],
+    totalSpend: 0, verificationNote: null,
+  };
+  addLog('Buyer "' + businessName + '" (' + businessType + ') registered'); toast('Registration complete — welcome!'); renderAll();
+}
+
+/* ============================== Contact unlock engine ============================== */
+function isSubscriptionActive(profile){
+  return profile.subscriptionExpiresAt && new Date(profile.subscriptionExpiresAt) > new Date();
+}
+function daysLeft(iso){ return Math.max(0, Math.ceil((new Date(iso) - new Date()) / 86400000)); }
+
+function requestUnlock(role, targetKey, targetLabel){
+  const profile = role === 'worker' ? state.currentWorker : state.currentBuyer;
+  if (!profile){ toast('Please complete your registration first'); return; }
+  if (profile.unlockedContacts.includes(targetKey)) return;
+
+  let method = null;
+  if (!profile.usedFreeUnlock){ profile.usedFreeUnlock = true; method = 'free'; }
+  else if (isSubscriptionActive(profile)){ method = 'subscription'; }
+  else if (profile.credits > 0){ profile.credits -= 1; method = 'credit'; }
+
+  if (method){
+    profile.unlockedContacts.push(targetKey);
+    if (role === 'buyer'){
+      const w = state.workers.find(function(w){ return String(w.id) === targetKey; });
+      if (w) w.timesContacted = (w.timesContacted||0) + 1;
+      if (targetKey === 'me' && state.currentWorker) state.currentWorker.timesContacted = (state.currentWorker.timesContacted||0) + 1;
+    }
+    const methodText = method==='free' ? 'used their free contact unlock' : (method==='subscription' ? 'unlocked (active subscription)' : 'unlocked (1 credit used)');
+    addLog((role === 'worker' ? 'Worker' : 'Buyer') + ' ' + methodText + ' — ' + targetLabel);
+    toast(method==='free' ? 'Free contact unlocked!' : (method==='subscription' ? 'Contact unlocked via your subscription' : 'Contact unlocked — 1 credit used'));
+    renderAll();
+    return;
+  }
+  state.pendingUnlock = { role: role, targetKey: targetKey, targetLabel: targetLabel };
+  state.planChooserOpen = role;
+  toast('Choose a plan to unlock this contact');
+  renderAll();
+}
+
+function buyPlan(role, planId){
+  const profile = role === 'worker' ? state.currentWorker : state.currentBuyer;
+  const plan = state.plans[role].find(function(p){ return p.id === planId; });
+  if (!profile || !plan) return;
+
+  if (plan.type === 'subscription'){
+    const expires = new Date(); expires.setDate(expires.getDate() + plan.days);
+    profile.subscriptionExpiresAt = expires.toISOString();
+  } else {
+    profile.credits += plan.contacts;
+  }
+  profile.totalSpend = (profile.totalSpend || 0) + plan.price;
+  addLog((role === 'worker' ? 'Worker' : 'Buyer') + ' purchased "' + plan.name + '" for ₹' + plan.price + ' (payment simulated — Razorpay integration pending)');
+  toast('Payment simulated: ' + plan.name + ' activated');
+  state.planChooserOpen = null;
+
+  if (state.pendingUnlock && state.pendingUnlock.role === role){
+    const pending = state.pendingUnlock;
+    state.pendingUnlock = null;
+    requestUnlock(role, pending.targetKey, pending.targetLabel);
+    return;
+  }
+  renderAll();
+}
+function closePlanChooser(){ state.pendingUnlock = null; state.planChooserOpen = null; renderAll(); }
+
+function contactBlock(role, targetKey, targetLabel, mobile){
+  const profile = role === 'worker' ? state.currentWorker : state.currentBuyer;
+  if (!profile) return '';
+  const unlocked = profile.unlockedContacts.includes(targetKey);
+  if (unlocked){ return '<div class="contact-line unlocked">📞 ' + mobile + '</div>'; }
+  return '<div class="contact-line locked">📞 ' + maskMobile(mobile) +
+    ' <button class="btn btn-accent btn-sm" onclick="requestUnlock(\'' + role + '\',\'' + targetKey.replace(/'/g,"\\'") + '\',\'' + targetLabel.replace(/'/g,"\\'") + '\')">Unlock number</button></div>';
+}
+
+function renderMyPlanCard(role){
+  const profile = role === 'worker' ? state.currentWorker : state.currentBuyer;
+  const el = document.getElementById(role === 'worker' ? 'workerPlanCard' : 'buyerPlanCard');
+  if (!profile || !el) return;
+  const subActive = isSubscriptionActive(profile);
+  let statusText;
+  if (subActive) statusText = 'Unlimited plan active — expires in ' + daysLeft(profile.subscriptionExpiresAt) + ' day(s)';
+  else if (profile.credits > 0) statusText = profile.credits + ' contact credit(s) remaining';
+  else if (!profile.usedFreeUnlock) statusText = '1 free contact unlock available';
+  else statusText = 'No free unlocks or credits left';
+
+  const displayName = role === 'worker' ? state.currentWorker.name : state.currentBuyer.businessName;
+  el.innerHTML = '<div><strong>' + displayName + '</strong> ' + verifiedBadge(profile.verified) + '<div class="meta">' + statusText + '</div></div>' +
+    '<button class="btn btn-ghost btn-sm" onclick="state.planChooserOpen = state.planChooserOpen === \'' + role + '\' ? null : \'' + role + '\'; renderAll();">' +
+    (state.planChooserOpen === role ? 'Hide plans' : 'View plans') + '</button>';
+}
+
+function renderPlanChooser(role){
+  const el = document.getElementById(role === 'worker' ? 'workerPlanChooser' : 'buyerPlanChooser');
+  if (!el) return;
+  if (state.planChooserOpen !== role){ el.innerHTML = ''; return; }
+  const heading = state.pendingUnlock ? (' — to unlock ' + state.pendingUnlock.targetLabel) : '';
+  el.innerHTML = '<div class="panel"><div class="section-title">Choose a plan' + heading + '</div><div class="plan-grid">' +
+    state.plans[role].map(function(p){
+      const desc = p.type === 'onetime' ? (p.contacts + ' contact' + (p.contacts>1?'s':'')) : ('Unlimited · ' + p.days + ' days');
+      return '<div class="plan-card"><h4>'+p.name+'</h4><div class="price">₹'+p.price+'</div><div class="desc">'+desc+'</div>' +
+        '<button class="btn btn-primary btn-sm" onclick="buyPlan(\''+role+'\','+p.id+')">Simulate payment</button></div>';
+    }).join('') +
+    '</div><div class="btn-row"><button class="btn btn-ghost btn-sm" onclick="closePlanChooser()">Cancel</button></div></div>';
+}
+
+/* ============================== Availability counters ============================== */
+function renderBarList(targetId, counts){
+  const el = document.getElementById(targetId);
+  const entries = Object.entries(counts);
+  if (entries.length === 0){ el.innerHTML = '<div class="empty">No categories yet — ask Admin to add some.</div>'; return; }
+  const max = Math.max.apply(null, [1].concat(entries.map(function(e){ return e[1]; })));
+  el.innerHTML = entries.map(function(e){
+    const cat = e[0], count = e[1];
+    return '<div class="avail-row"><span class="avail-label">'+cat+'</span>' +
+      '<div class="avail-track"><div class="avail-fill" style="width:'+Math.round((count/max)*100)+'%"></div></div>' +
+      '<span class="avail-count">'+count+'</span></div>';
+  }).join('');
+}
+function renderWorkerAvailability(){
+  const counts = {};
+  state.taxonomy.categories.forEach(function(c){ counts[c] = 0; });
+  state.jobs.filter(function(j){ return j.status==='OPEN'; }).forEach(function(j){ counts[j.category] = (counts[j.category]||0) + 1; });
+  renderBarList('workerAvailability', counts);
+}
+function renderBuyerAvailability(){
+  const counts = {};
+  state.taxonomy.categories.forEach(function(c){ counts[c] = 0; });
+  state.workers.forEach(function(w){ counts[w.category] = (counts[w.category]||0) + 1; });
+  renderBarList('buyerAvailability', counts);
+}
+
+/* ============================== Worker: job search ============================== */
+function onWorkerStateChange(){
+  fillCityDropdown(document.getElementById('wSearchCity'), document.getElementById('wSearchState').value, true);
+  renderJobList();
+}
+function renderJobList(){
+  if (!state.currentWorker) return;
+  const text = (document.getElementById('wSearchText') && document.getElementById('wSearchText').value || '').toLowerCase();
+  const cat = document.getElementById('wSearchCategory') && document.getElementById('wSearchCategory').value || '';
+  const st = document.getElementById('wSearchState') && document.getElementById('wSearchState').value || '';
+  const city = document.getElementById('wSearchCity') && document.getElementById('wSearchCity').value || '';
+
+  let results = state.jobs.filter(function(j){
+    if (j.status !== 'OPEN') return false;
+    if (text && j.title.toLowerCase().indexOf(text) === -1) return false;
+    if (cat && j.category !== cat) return false;
+    if (st && j.state !== st) return false;
+    if (city && j.city !== city) return false;
+    return true;
+  });
+  results = results.slice().sort(function(a,b){ return (b.featured?1:0) - (a.featured?1:0); });
+
+  const el = document.getElementById('jobList');
+  if (state.jobs.length === 0){ el.innerHTML = '<div class="empty">No jobs posted yet.</div>'; return; }
+  if (results.length === 0){ el.innerHTML = '<div class="empty">No jobs match your search.</div>'; return; }
+
+  el.innerHTML = results.map(function(j){
+    const applyDisabled = (state.application && state.selectedJobId === j.id) ? 'disabled' : '';
+    const applyLabel = (state.application && state.selectedJobId === j.id) ? 'Already applied' : 'Apply now';
+    return '<div class="card"><div class="card-row"><div>' +
+      '<h4>' + j.title + (j.featured ? ' <span class="badge b-featured">★ Featured</span>' : '') + '</h4>' +
+      '<div class="meta">' + j.category + ' · ' + j.city + ', ' + j.state + '</div>' +
+      '<div class="meta" style="color:var(--indigo); font-weight:700; margin-top:4px;">₹' + j.rate + ' / day</div>' +
+      '<div class="meta" style="margin-top:6px;">' + j.buyerName + ' (' + j.buyerType + ') ' + verifiedBadge(j.buyerVerified) + '</div>' +
+      '<div class="meta">Aadhaar: ' + aadhaarStatusLabel(j) + '</div>' +
+      contactBlock('worker', j.buyerMobile, j.buyerName, j.buyerMobile) +
+      '</div><span class="badge b-open">OPEN</span></div>' +
+      '<div class="btn-row"><button class="btn btn-accent" ' + applyDisabled + ' onclick="applyToJob(' + j.id + ')">' + applyLabel + '</button></div></div>';
+  }).join('');
+}
+function applyToJob(jobId){
+  if (state.application){ toast('This demo tracks one active application at a time — see below.'); return; }
+  const job = state.jobs.find(function(j){ return j.id === jobId; });
+  if (job && aadhaarRequired(job) && !state.currentWorker.aadhaar){
+    const val = prompt('This job requires Aadhaar verification.\nEnter your 12-digit Aadhaar number:');
+    if (val === null) return;
+    if (!/^\d{12}$/.test(val)){ toast('Enter a valid 12-digit Aadhaar number'); return; }
+    state.currentWorker.aadhaar = val;
+    addLog('Worker submitted Aadhaar number for job application');
+  }
+  state.selectedJobId = jobId;
+  state.application = { status: 'SUBMITTED' };
+  addLog('Worker "' + state.currentWorker.name + '" applied to job #' + jobId);
+  toast('Application submitted');
+  if (job && (!state.currentBuyer || job.buyerName !== state.currentBuyer.businessName)){
+    toast('Tip: post your own job as Buyer to see the full hire → work → pay demo.');
+  }
+  renderAll();
+}
+
+function renderWorkerFlow(){
+  const el = document.getElementById('workerFlow');
+  const job = selectedJob();
+  if (!state.application || !job){ el.innerHTML = '<div class="empty">You haven\'t applied to any job yet.</div>'; return; }
+  let html = '<div class="card"><div class="card-row"><div><h4>' + job.title + '</h4><div class="meta">Application status</div></div>' +
+    '<span class="badge b-' + state.application.status.toLowerCase() + '">' + state.application.status + '</span></div></div>';
+
+  if (state.application.status === 'REJECTED'){ el.innerHTML = html + '<div class="empty">This application was not accepted.</div>'; return; }
+  if (state.application.status === 'SUBMITTED'){ el.innerHTML = html + '<div class="empty">Waiting for the employer to review.</div>'; return; }
+  if (state.contract){
+    const c = state.contract;
+    html += '<div class="card"><div class="card-row"><div><h4>Work contract</h4><div class="meta">₹' + job.rate + '/day · ' + job.city + ', ' + job.state + '</div></div>' +
+      '<span class="badge b-' + c.status.toLowerCase() + '">' + c.status + '</span></div><div class="btn-row">' +
+      (c.status === 'SENT' ? '<button class="btn btn-primary" onclick="workerAcceptContract()">Accept contract</button>' : '') +
+      (c.status === 'ACTIVE' ? '<button class="btn btn-ghost" onclick="submitTermination(\'WORKER\')">Request termination</button>' : '') +
+      '</div></div>';
+  }
+  el.innerHTML = html;
+}
+function workerAcceptContract(){
+  state.contract.status = 'ACCEPTED';
+  addLog('Worker accepted the contract'); toast('Contract accepted'); renderAll();
+}
+
+/* ============================== Employer/Buyer: post job ============================== */
+function onEmployerJobStateChange(){
+  fillCityDropdown(document.getElementById('jobCity'), document.getElementById('jobState').value, false);
+}
+function postJob(){
+  if (!state.currentBuyer) return;
+  const title = document.getElementById('jobTitle').value.trim() || 'Untitled Job';
+  const category = document.getElementById('jobCategory').value;
+  const stName = document.getElementById('jobState').value;
+  const city = document.getElementById('jobCity').value;
+  const rate = Number(document.getElementById('jobRate').value) || 0;
+  const wantsFeatured = document.getElementById('jobFeatured').checked;
+  const aadhaarPref = document.getElementById('jobAadhaarPref').value;
+
+  if (!category){ toast('Add at least one category in Admin view first'); return; }
+  if (!stName){ toast('Add at least one state in Admin view first'); return; }
+  if (!city){ toast('Add at least one city under that state in Admin view first'); return; }
+
+  const job = {
+    id: state.jobSeq++, title: title, category: category, state: stName, city: city, rate: rate, status: 'OPEN',
+    featured: wantsFeatured, buyerName: state.currentBuyer.businessName, buyerType: state.currentBuyer.businessType,
+    buyerMobile: state.currentBuyer.mobile, buyerVerified: state.currentBuyer.verified,
+    aadhaarBuyerPref: aadhaarPref, aadhaarAdminOverride: null,
+  };
+  state.jobs.push(job);
+  if (wantsFeatured) state.currentBuyer.totalSpend = (state.currentBuyer.totalSpend || 0) + state.featuredListingPrice;
+  addLog('Buyer "' + state.currentBuyer.businessName + '" posted job "' + title + '"' + (wantsFeatured ? (' + featured listing (₹' + state.featuredListingPrice + ' simulated)') : ''));
+  toast(wantsFeatured ? ('Job posted & featured (₹' + state.featuredListingPrice + ' simulated)') : 'Job posted');
+  document.getElementById('jobFeatured').checked = false;
+  renderAll();
+}
+function closeJob(id){
+  const j = state.jobs.find(function(j){ return j.id===id; });
+  if (j) j.status = 'CLOSED';
+  addLog('Buyer closed job "' + j.title + '"'); renderAll();
+}
+function renderEmployerJobList(){
+  const el = document.getElementById('employerJobList');
+  if (!state.currentBuyer) return;
+  const mine = state.jobs.filter(function(j){ return j.buyerName === state.currentBuyer.businessName; });
+  if (mine.length === 0){ el.innerHTML = '<div class="empty">You haven\'t posted any jobs yet.</div>'; return; }
+  el.innerHTML = mine.slice().reverse().map(function(j){
+    return '<div class="card"><div class="card-row"><div><h4>' + j.title + (j.featured ? ' <span class="badge b-featured">★ Featured</span>' : '') + '</h4>' +
+      '<div class="meta">' + j.category + ' · ' + j.city + ', ' + j.state + ' · ₹' + j.rate + '/day</div>' +
+      '<div class="meta">Aadhaar: ' + aadhaarStatusLabel(j) + '</div></div>' +
+      '<div style="display:flex; gap:8px; align-items:center;"><span class="badge b-' + j.status.toLowerCase() + '">' + j.status + '</span>' +
+      (j.status === 'OPEN' ? '<button class="btn btn-ghost btn-sm" onclick="closeJob(' + j.id + ')">Close</button>' : '') + '</div></div>' +
+      '<div class="btn-row"><button class="btn btn-ghost btn-sm" onclick="selectJobForReview(' + j.id + ')">' +
+      (state.selectedJobId === j.id ? 'Viewing applicants below ↓' : 'View applicants') + '</button></div></div>';
+  }).join('');
+}
+function selectJobForReview(id){ state.selectedJobId = id; renderAll(); }
+
+function onBuyerStateChange(){
+  fillCityDropdown(document.getElementById('bSearchCity'), document.getElementById('bSearchState').value, true);
+  renderWorkerSearch();
+}
+function renderWorkerSearch(){
+  if (!state.currentBuyer) return;
+  const text = (document.getElementById('bSearchText') && document.getElementById('bSearchText').value || '').toLowerCase();
+  const cat = document.getElementById('bSearchCategory') && document.getElementById('bSearchCategory').value || '';
+  const st = document.getElementById('bSearchState') && document.getElementById('bSearchState').value || '';
+  const city = document.getElementById('bSearchCity') && document.getElementById('bSearchCity').value || '';
+
+  const results = state.workers.filter(function(w){
+    if (text && !(w.name.toLowerCase().indexOf(text) !== -1 || w.skills.some(function(s){ return s.toLowerCase().indexOf(text) !== -1; }))) return false;
+    if (cat && w.category !== cat) return false;
+    if (st && w.state !== st) return false;
+    if (city && w.city !== city) return false;
+    return true;
+  });
+
+  const el = document.getElementById('workerSearchResults');
+  if (results.length === 0){ el.innerHTML = '<div class="empty">No workers match this search.</div>'; return; }
+  el.innerHTML = results.map(function(w){
+    return '<div class="card"><div class="card-row"><div><h4>' + w.name + ' ' + verifiedBadge(w.verified) + '</h4>' +
+      '<div class="meta">' + w.category + ' · ' + w.city + ', ' + w.state + ' · ' + w.experience + ' yrs experience</div>' +
+      '<div class="tag-list">' + w.skills.map(function(s){ return '<span class="chip">'+s+'</span>'; }).join('') + '</div>' +
+      contactBlock('buyer', String(w.id), w.name, w.mobile) + '</div></div></div>';
+  }).join('');
+}
+
+function renderEmployerApplicants(){
+  const el = document.getElementById('employerApplicants');
+  if (!state.currentBuyer) return;
+  const job = state.jobs.find(function(j){ return j.id === state.selectedJobId; });
+  if (!job || job.buyerName !== state.currentBuyer.businessName){ el.innerHTML = '<div class="empty">Select one of your own jobs above ("View applicants") to review candidates.</div>'; return; }
+  if (!state.application || state.selectedJobId !== job.id){ el.innerHTML = '<div class="empty">No applicants yet for "' + job.title + '".</div>'; return; }
+  const a = state.application;
+  el.innerHTML = '<div class="card"><div class="card-row"><div><h4>' + (state.currentWorker ? state.currentWorker.name : 'Applicant') + '</h4>' +
+    '<div class="meta">Applied for "' + job.title + '"</div></div><span class="badge b-' + a.status.toLowerCase() + '">' + a.status + '</span></div>' +
+    (a.status === 'SUBMITTED' ? '<div class="btn-row"><button class="btn btn-primary" onclick="acceptApplication()">Accept</button> <button class="btn btn-danger" onclick="rejectApplication()">Reject</button></div>' : '') +
+    '</div>';
+}
+function acceptApplication(){
+  state.application.status = 'ACCEPTED';
+  state.contract = { status: 'DRAFT' };
+  addLog('Buyer accepted application → Hiring created → Draft contract created');
+  toast('Accepted — hiring & draft contract created automatically');
+  renderAll();
+}
+function rejectApplication(){
+  state.application.status = 'REJECTED';
+  addLog('Buyer rejected application'); toast('Application rejected'); renderAll();
+}
+
+function renderEmployerContract(){
+  const el = document.getElementById('employerContract');
+  const job = selectedJob();
+  if (!state.contract || !job || state.selectedJobId !== job.id){ el.innerHTML = '<div class="empty">No contract yet — accept an application first.</div>'; return; }
+  const c = state.contract;
+  let actions = '';
+  if (c.status === 'DRAFT') actions = '<button class="btn btn-primary" onclick="sendContract()">Send contract to worker</button>';
+  if (c.status === 'ACCEPTED') actions = '<button class="btn btn-primary" onclick="activateContract()">Confirm & activate</button>';
+  if (c.status === 'ACTIVE') actions = '<button class="btn btn-primary" onclick="completeContract()">Mark completed</button> <button class="btn btn-danger" onclick="submitTermination(\'EMPLOYER\')">Terminate</button>';
+  el.innerHTML = '<div class="card"><div class="card-row"><div><h4>Contract with ' + (state.currentWorker ? state.currentWorker.name : 'Worker') + '</h4>' +
+    '<div class="meta">₹' + job.rate + '/day · ' + job.title + '</div></div><span class="badge b-' + c.status.toLowerCase() + '">' + c.status + '</span></div>' +
+    '<div class="btn-row">' + actions + '</div></div>';
+}
+function sendContract(){ state.contract.status='SENT'; addLog('Buyer sent contract'); toast('Contract sent to worker'); renderAll(); }
+function activateContract(){ state.contract.status='ACTIVE'; addLog('Buyer activated contract'); toast('Contract is now ACTIVE'); renderAll(); }
+function completeContract(){ state.contract.status='COMPLETED'; addLog('Contract marked COMPLETED'); toast('Contract completed — ratings unlocked'); renderAll(); }
+function submitTermination(by){
+  const reason = prompt('Reason for termination:');
+  if (reason === null) return;
+  state.contract.status = 'TERMINATED';
+  addLog('Contract terminated by ' + by + ' — "' + reason + '"'); toast('Contract terminated'); renderAll();
+}
+
+/* ============================== Work log / review / payment ============================== */
+function renderWorkerWorkLog(){
+  const el = document.getElementById('workerWorkLog');
+  if (!state.contract || state.contract.status !== 'ACTIVE'){ el.innerHTML = '<div class="empty">Available once your contract is ACTIVE.</div>'; return; }
+  el.innerHTML = '<div class="btn-row" style="margin-bottom:12px;"><input id="entryHours" type="number" min="0.5" max="24" step="0.5" value="8" style="width:90px;" />' +
+    '<button class="btn btn-accent" onclick="submitWorkEntry()">Log today\'s hours</button></div><div id="entriesList"></div>';
+  renderEntries('entriesList', true);
+}
+function submitWorkEntry(){
+  const hours = Number(document.getElementById('entryHours').value);
+  if (!(hours > 0) || hours > 24){ toast('Hours must be between 0 and 24'); return; }
+  state.workEntries.push({ id: entrySeq++, date: new Date().toLocaleDateString(), hours: hours, status: 'SUBMITTED' });
+  addLog('Worker logged ' + hours + 'h of work'); toast('Work entry submitted for approval'); renderAll();
+}
+function renderEntries(targetId, workerView){
+  const el = document.getElementById(targetId);
+  if (state.workEntries.length === 0){ el.innerHTML = '<div class="empty">No work entries yet.</div>'; return; }
+  el.innerHTML = state.workEntries.slice().reverse().map(function(w){
+    return '<div class="card"><div class="card-row"><div><h4>' + w.date + '</h4><div class="meta">' + w.hours + ' hours</div></div>' +
+      '<span class="badge b-' + w.status.toLowerCase() + '">' + w.status + '</span></div>' +
+      (!workerView && w.status === 'SUBMITTED' ? '<div class="btn-row"><button class="btn btn-primary" onclick="reviewEntry(' + w.id + ', true)">Approve</button> <button class="btn btn-danger" onclick="reviewEntry(' + w.id + ', false)">Reject</button></div>' : '') +
+      '</div>';
+  }).join('');
+}
+function renderEmployerWorkReview(){
+  const el = document.getElementById('employerWorkReview');
+  if (!state.contract || state.contract.status !== 'ACTIVE'){ el.innerHTML = '<div class="empty">No active contract to review work against.</div>'; return; }
+  el.innerHTML = '<div id="employerEntriesList"></div>';
+  renderEntries('employerEntriesList', false);
+}
+function reviewEntry(id, approve){
+  const entry = state.workEntries.find(function(w){ return w.id === id; });
+  entry.status = approve ? 'APPROVED' : 'REJECTED';
+  addLog('Buyer ' + (approve ? 'approved' : 'rejected') + ' work entry (' + entry.hours + 'h, ' + entry.date + ')');
+  toast(approve ? 'Work entry approved — eligible for payment' : 'Work entry rejected');
+  renderAll();
+}
+function renderEmployerPayment(){
+  const el = document.getElementById('employerPayment');
+  const job = selectedJob();
+  const settleable = state.workEntries.filter(function(w){ return w.status === 'APPROVED' && !w.settled; });
+  let html = '';
+  if (job && settleable.length > 0){
+    const total = settleable.reduce(function(sum,w){ return sum + w.hours * (job.rate / 8); }, 0);
+    html += '<div class="card"><div class="card-row"><div><h4>' + settleable.length + ' approved entr' + (settleable.length>1?'ies':'y') + ' ready to settle</h4>' +
+      '<div class="meta">Calculated at ₹' + job.rate + '/day (8h)</div></div><div style="font-weight:800; font-size:16px;">₹' + total.toFixed(0) + '</div></div>' +
+      '<div class="btn-row"><button class="btn btn-primary" onclick="createPayment(' + total + ')">Create payment</button></div></div>';
+  }
+  if (state.payments.length === 0 && settleable.length === 0){ html += '<div class="empty">Nothing to settle yet.</div>'; }
+  else {
+    html += state.payments.slice().reverse().map(function(p){
+      return '<div class="card"><div class="card-row"><div><h4>₹' + p.amount.toFixed(0) + '</h4><div class="meta">Payment #' + p.id + '</div></div>' +
+        '<span class="badge b-' + p.status.toLowerCase() + '">' + p.status + '</span></div>' +
+        ((p.status === 'PENDING' || p.status === 'PROCESSING') ? '<div class="btn-row"><button class="btn btn-primary" onclick="processPayment(' + p.id + ', true)">Mark paid</button> <button class="btn btn-danger" onclick="processPayment(' + p.id + ', false)">Mark failed</button></div>' : '') +
+        (p.status === 'FAILED' ? '<div class="btn-row"><button class="btn btn-ghost" onclick="retryPayment(' + p.id + ')">Retry</button></div>' : '') + '</div>';
+    }).join('');
+  }
+  el.innerHTML = html;
+}
+function createPayment(amount){
+  state.workEntries.forEach(function(w){ if (w.status === 'APPROVED' && !w.settled) w.settled = true; });
+  state.payments.push({ id: paySeq++, amount: amount, status: 'PENDING' });
+  addLog('Payment created for ₹' + amount.toFixed(0) + ' (worker earnings — double-settlement blocked at DB level)');
+  toast('Payment record created'); renderAll();
+}
+function processPayment(id, success){
+  const p = state.payments.find(function(p){ return p.id===id; });
+  p.status = success ? 'PAID' : 'FAILED';
+  addLog('Payment #' + id + ' marked ' + p.status); toast(success ? 'Payment marked PAID' : 'Payment marked FAILED'); renderAll();
+}
+function retryPayment(id){
+  const p = state.payments.find(function(p){ return p.id===id; });
+  p.status = 'PROCESSING';
+  addLog('Payment #' + id + ' retried'); toast('Retrying payment...'); renderAll();
+}
+function renderWorkerPayments(){
+  const el = document.getElementById('workerPayments');
+  if (state.payments.length === 0){ el.innerHTML = '<div class="empty">No payments yet.</div>'; return; }
+  el.innerHTML = state.payments.slice().reverse().map(function(p){
+    return '<div class="card"><div class="card-row"><div><h4>₹' + p.amount.toFixed(0) + '</h4><div class="meta">Payment #' + p.id + '</div></div>' +
+      '<span class="badge b-' + p.status.toLowerCase() + '">' + p.status + '</span></div></div>';
+  }).join('');
+}
+
+/* ============================== Admin log & ratings ============================== */
+function renderAdminLog(){
+  const el = document.getElementById('adminLog');
+  if (state.log.length === 0){ el.innerHTML = '<div class="empty">No activity yet.</div>'; return; }
+  el.innerHTML = state.log.map(function(l){ return '<div class="card"><div class="card-row"><div>' + l.action + '</div><div class="meta">' + l.at + '</div></div></div>'; }).join('');
+}
+function renderAdminRatings(){
+  const el = document.getElementById('adminRatings');
+  const eligible = state.contract && (state.contract.status === 'COMPLETED' || state.contract.status === 'TERMINATED');
+  let html = '';
+  if (!eligible){ html = '<div class="empty">Ratings unlock once the contract is COMPLETED or TERMINATED.</div>'; }
+  else {
+    html += '<div class="card"><h4>Rate this engagement</h4><div class="meta">Available to both worker and buyer, once each</div><div class="btn-row">' +
+      [1,2,3,4,5].map(function(n){ return '<button class="btn btn-ghost" onclick="submitRating(' + n + ')">' + '★'.repeat(n) + '</button>'; }).join('') + '</div></div>';
+  }
+  if (state.ratings.length){
+    html += state.ratings.map(function(r){
+      return '<div class="card"><div class="card-row"><div>' + r.from + ' rated ' + r.to + '</div>' +
+        '<div class="stars">' + '★'.repeat(r.score) + '☆'.repeat(5-r.score) + '</div></div></div>';
+    }).join('');
+  }
+  el.innerHTML = html;
+}
+function submitRating(score){
+  if (state.ratings.some(function(r){ return r.from === 'Buyer'; })){ toast('Already rated for this contract'); return; }
+  state.ratings.push({ from: 'Buyer', to: (state.currentWorker ? state.currentWorker.name : 'Worker') + ' (Worker)', score: score });
+  addLog('Buyer rated worker: ' + score + '★'); toast('Rating submitted — reputation updated'); renderAll();
+}
+
+/* ============================== Lifecycle stepper ============================== */
+const STEPS = [['reg','Registered'],['job','Job posted'],['applied','Applied'],['accepted','Accepted'],['contract','Contract active'],['work','Work approved'],['paid','Paid'],['rated','Rated']];
+function currentStepIndex(){
+  if (!state.currentWorker || !state.currentBuyer) return 0;
+  if (state.jobs.length === 0) return 0;
+  if (!state.application) return 1;
+  if (state.application.status === 'REJECTED') return 2;
+  if (state.application.status !== 'ACCEPTED') return 2;
+  if (!state.contract || state.contract.status === 'DRAFT' || state.contract.status === 'SENT') return 3;
+  if (state.contract.status === 'ACCEPTED') return 4;
+  if (state.contract.status === 'ACTIVE'){
+    const hasApproved = state.workEntries.some(function(w){ return w.status === 'APPROVED'; });
+    if (!hasApproved) return 4;
+    const paid = state.payments.some(function(p){ return p.status === 'PAID'; });
+    if (!paid) return 5;
+    return 6;
+  }
+  if (state.contract.status === 'COMPLETED' || state.contract.status === 'TERMINATED'){ return state.ratings.length > 0 ? 7 : 6; }
+  return 4;
+}
+function renderStepper(){
+  const idx = currentStepIndex();
+  document.getElementById('stepper').innerHTML = STEPS.map(function(s, i){
+    const cls = i < idx ? 'done' : (i === idx ? 'current' : '');
+    const num = i < idx ? '✓' : (i+1);
+    return '<div class="step ' + cls + '"><div class="num">' + num + '</div><label>' + s[1] + '</label></div>';
+  }).join('');
+}
+
+document.getElementById('roleSwitch').addEventListener('click', function(e){
+  const btn = e.target.closest('button[data-role]');
+  if (!btn) return;
+  document.querySelectorAll('.role-switch button').forEach(function(b){ b.classList.remove('active'); });
+  btn.classList.add('active');
+  const role = btn.dataset.role;
+  ['worker','employer','admin'].forEach(function(r){ document.getElementById('view-'+r).classList.toggle('hidden', r !== role); });
+});
+
+function renderAll(){
+  fillCategoryDropdowns();
+  fillStateDropdowns();
+  if (document.getElementById('wSearchCity')) fillCityDropdown(document.getElementById('wSearchCity'), document.getElementById('wSearchState').value, true);
+  if (document.getElementById('bSearchCity')) fillCityDropdown(document.getElementById('bSearchCity'), document.getElementById('bSearchState').value, true);
+  if (document.getElementById('jobCity')) fillCityDropdown(document.getElementById('jobCity'), document.getElementById('jobState').value, false);
+  document.getElementById('featuredLabel').textContent = 'Feature this job at the top of search results (₹' + state.featuredListingPrice + ', simulated)';
+  document.getElementById('featuredPriceInput').value = state.featuredListingPrice;
+
+  renderAdminTaxonomy();
+  renderPlansAdmin();
+  renderAadhaarAdmin();
+  renderVerificationQueue();
+  renderStepper();
+
+  renderWorkerRegGate();
+  renderBuyerRegGate();
+
+  if (state.currentWorker){
+    renderMyPlanCard('worker'); renderPlanChooser('worker');
+    renderWorkerAvailability(); renderJobList(); renderWorkerFlow(); renderWorkerWorkLog(); renderWorkerPayments();
+  }
+  if (state.currentBuyer){
+    renderMyPlanCard('buyer'); renderPlanChooser('buyer');
+    renderBuyerAvailability(); renderEmployerJobList(); renderWorkerSearch();
+    renderEmployerApplicants(); renderEmployerContract(); renderEmployerWorkReview(); renderEmployerPayment();
+  }
+
+  renderAdminLog();
+  renderAdminRatings();
+}
+
+document.getElementById('wSearchCategory').dataset.fill = 'categories'; document.getElementById('wSearchCategory').dataset.includeAll = 'true';
+document.getElementById('wSearchState').dataset.fill = 'states'; document.getElementById('wSearchState').dataset.includeAll = 'true';
+document.getElementById('bSearchCategory').dataset.fill = 'categories'; document.getElementById('bSearchCategory').dataset.includeAll = 'true';
+document.getElementById('bSearchState').dataset.fill = 'states'; document.getElementById('bSearchState').dataset.includeAll = 'true';
+document.getElementById('jobCategory').dataset.fill = 'categories'; document.getElementById('jobCategory').dataset.includeAll = 'false';
+document.getElementById('jobState').dataset.fill = 'states'; document.getElementById('jobState').dataset.includeAll = 'false';
+
+renderAll();
+</script>
+</body>
+</html>
