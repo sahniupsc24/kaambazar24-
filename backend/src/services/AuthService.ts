@@ -281,6 +281,7 @@ export class AuthService {
         phone: user.phone,
         role: user.role,
         isActive: user.isActive,
+        avatarUrl: user.avatarUrl,
       },
     };
   }

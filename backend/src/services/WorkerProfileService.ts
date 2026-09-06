@@ -54,7 +54,8 @@ export class WorkerProfileService {
     Object.assign(profile, profileUpdates);
     profile.isProfileComplete = computeIsComplete(profile);
 
-    return repo.save(profile);
+    await repo.save(profile);
+    return OwnershipService.resolveWorkerProfile(userId);
   }
 
   static async submitAadhaar(userId: string, data: { aadhaarNumber: string; aadhaarFrontUrl: string; aadhaarBackUrl: string }) {

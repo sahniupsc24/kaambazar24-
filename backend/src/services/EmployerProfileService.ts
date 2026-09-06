@@ -42,7 +42,8 @@ export class EmployerProfileService {
     Object.assign(profile, profileUpdates);
     profile.isProfileComplete = computeIsComplete(profile);
 
-    return repo.save(profile);
+    await repo.save(profile);
+    return OwnershipService.resolveEmployerProfile(userId);
   }
 
   // Public-safe view — excludes anything not meant to be shown to job seekers.

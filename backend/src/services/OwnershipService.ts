@@ -13,7 +13,7 @@ import { ApiError } from '../utils/ApiError';
 export class OwnershipService {
   static async resolveWorkerProfile(userId: string): Promise<WorkerProfile> {
     const repo = AppDataSource.getRepository(WorkerProfile);
-    const profile = await repo.findOne({ where: { userId } });
+    const profile = await repo.findOne({ where: { userId }, relations: ['user', 'primaryCategory', 'location'] });
     if (!profile) {
       throw ApiError.notFound('Worker profile not found for the current account');
     }
@@ -22,7 +22,7 @@ export class OwnershipService {
 
   static async resolveEmployerProfile(userId: string): Promise<EmployerProfile> {
     const repo = AppDataSource.getRepository(EmployerProfile);
-    const profile = await repo.findOne({ where: { userId } });
+    const profile = await repo.findOne({ where: { userId }, relations: ['user', 'primaryCategory', 'location'] });
     if (!profile) {
       throw ApiError.notFound('Employer profile not found for the current account');
     }

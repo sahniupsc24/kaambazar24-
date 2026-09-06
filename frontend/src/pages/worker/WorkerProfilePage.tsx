@@ -2,7 +2,42 @@ import { useEffect, useState, FormEvent } from 'react';
 import { DashboardLayout } from '../../layouts/DashboardLayout';
 import { WORKER_NAV_LINKS } from './WorkerDashboardPage';
 import { api } from '../../api/client';
+import { useAuth } from '../../contexts/AuthContext';
 import { LoadingState, ErrorState, PrimaryButton, Card, SectionHeader, FormGroup, Input, StatusBadge, useToast } from '../../components/common/Primitives';
+
+function compressImage(file: File, maxWidth = 300, maxHeight = 300): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = (event) => {
+      const img = new Image();
+      img.src = event.target?.result as string;
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        let width = img.width;
+        let height = img.height;
+        if (width > height) {
+          if (width > maxWidth) {
+            height = Math.round((height * maxWidth) / width);
+            width = maxWidth;
+          }
+        } else {
+          if (height > maxHeight) {
+            width = Math.round((width * maxHeight) / height);
+            height = maxHeight;
+          }
+        }
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx?.drawImage(img, 0, 0, width, height);
+        resolve(canvas.toDataURL('image/jpeg', 0.8));
+      };
+      img.onerror = (err) => reject(err);
+    };
+    reader.onerror = (err) => reject(err);
+  });
+}
 
 export function WorkerProfilePage() {
   const [profile, setProfile] = useState<any>(null);
@@ -10,6 +45,7 @@ export function WorkerProfilePage() {
   const [error, setError] = useState<string | null>(null);
   const [saveState, setSaveState] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
   const { toast } = useToast();
+  const { refreshUser } = useAuth();
 
   useEffect(() => {
     api.get('/profiles/worker/me')
@@ -29,7 +65,7 @@ export function WorkerProfilePage() {
       const res = await api.put('/profiles/worker/me', {
         fullName: profile.fullName,
         email: profile.email || profile.user?.email,
-        avatarUrl: profile.avatarUrl || profile.user?.avatarUrl,
+        avatarUrl: profile.avatarUrl !== undefined ? profile.avatarUrl : profile.user?.avatarUrl,
         bio: profile.bio,
         yearsOfExperience: Number(profile.yearsOfExperience ?? profile.experienceYears) || 0,
         hourlyRate: profile.hourlyRate,
@@ -37,6 +73,7 @@ export function WorkerProfilePage() {
         isAvailable: profile.isAvailable,
       });
       setProfile(res.data.data);
+      await refreshUser();
       setSaveState('saved');
       toast('Worker profile updated successfully!', 'success');
     } catch {
@@ -48,6 +85,8 @@ export function WorkerProfilePage() {
   if (isLoading) return <DashboardLayout links={WORKER_NAV_LINKS}><LoadingState /></DashboardLayout>;
   if (error) return <DashboardLayout links={WORKER_NAV_LINKS}><ErrorState message={error} /></DashboardLayout>;
 
+  const currentAvatar = profile.avatarUrl || profile.user?.avatarUrl;
+
   return (
     <DashboardLayout links={WORKER_NAV_LINKS} breadcrumbs={[{ label: 'Worker', href: '/worker/dashboard' }, { label: 'My Profile' }]}>
       <SectionHeader title="Worker Profile Settings" subtitle="Keep your skills, experience, and availability up to date to get more job offers." />
@@ -56,9 +95,9 @@ export function WorkerProfilePage() {
         <Card>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20, flexWrap: 'wrap', gap: 12 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-              {profile.avatarUrl || profile.user?.avatarUrl ? (
+              {currentAvatar ? (
                 <img
-                  src={profile.avatarUrl || profile.user?.avatarUrl}
+                  src={currentAvatar}
                   alt={profile.fullName || 'Worker'}
                   style={{ width: 50, height: 50, borderRadius: '50%', objectFit: 'cover', border: '2px solid var(--border)' }}
                 />
@@ -79,9 +118,9 @@ export function WorkerProfilePage() {
             {/* Profile Avatar Photo Selector */}
             <FormGroup label="Profile Photo / Avatar (प्रोफाइल फोटो)">
               <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-                {profile.avatarUrl || profile.user?.avatarUrl ? (
+                {currentAvatar ? (
                   <img
-                    src={profile.avatarUrl || profile.user?.avatarUrl}
+                    src={currentAvatar}
                     alt="Avatar"
                     style={{ width: 56, height: 56, borderRadius: '50%', objectFit: 'cover', border: '2px solid var(--border)' }}
                   />
@@ -93,12 +132,15 @@ export function WorkerProfilePage() {
                 <input
                   type="file"
                   accept="image/*"
-                  onChange={(e) => {
+                  onChange={async (e) => {
                     const file = e.target.files?.[0];
                     if (!file) return;
-                    const r = new FileReader();
-                    r.onloadend = () => setProfile({ ...profile, avatarUrl: r.result as string });
-                    r.readAsDataURL(file);
+                    try {
+                      const compressed = await compressImage(file);
+                      setProfile({ ...profile, avatarUrl: compressed });
+                    } catch {
+                      toast('Failed to process image file', 'error');
+                    }
                   }}
                   style={{ fontSize: 13 }}
                 />

@@ -17,6 +17,7 @@ interface AuthContextValue {
     fullNameOrBusinessName: string;
   }) => Promise<void>;
   loginWithGoogle: (email: string, name: string, role?: UserRole.WORKER | UserRole.EMPLOYER, avatarUrl?: string) => Promise<AuthUser>;
+  refreshUser: () => Promise<void>;
   logout: () => void;
 }
 
@@ -32,20 +33,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  const refreshUser = async () => {
+    try {
+      const res = await api.get('/auth/me');
+      if (res.data.data) setUser(res.data.data);
+    } catch {}
+  };
+
   useEffect(() => {
     const token = localStorage.getItem('accessToken');
     if (!token) {
       setIsLoading(false);
       return;
     }
-    api
-      .get('/auth/me')
-      .then((res) => setUser(res.data.data))
-      .catch(() => {
-        localStorage.removeItem('accessToken');
-        localStorage.removeItem('refreshToken');
-      })
-      .finally(() => setIsLoading(false));
+    refreshUser().finally(() => setIsLoading(false));
   }, []);
 
   async function loginWithPassword(identifier: string, password: string): Promise<AuthUser> {
@@ -95,7 +96,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   return (
     <AuthContext.Provider
-      value={{ user, isLoading, loginWithPassword, requestOtp, verifyOtp, adminLogin, register, loginWithGoogle, logout }}
+      value={{ user, isLoading, loginWithPassword, requestOtp, verifyOtp, adminLogin, register, loginWithGoogle, refreshUser, logout }}
     >
       {children}
     </AuthContext.Provider>

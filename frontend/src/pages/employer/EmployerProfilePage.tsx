@@ -2,7 +2,42 @@ import { useEffect, useState, FormEvent } from 'react';
 import { DashboardLayout } from '../../layouts/DashboardLayout';
 import { EMPLOYER_NAV_LINKS } from './EmployerDashboardPage';
 import { api } from '../../api/client';
+import { useAuth } from '../../contexts/AuthContext';
 import { LoadingState, ErrorState, PrimaryButton, Card, SectionHeader, FormGroup, Input, StatusBadge, useToast } from '../../components/common/Primitives';
+
+function compressImage(file: File, maxWidth = 300, maxHeight = 300): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = (event) => {
+      const img = new Image();
+      img.src = event.target?.result as string;
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        let width = img.width;
+        let height = img.height;
+        if (width > height) {
+          if (width > maxWidth) {
+            height = Math.round((height * maxWidth) / width);
+            width = maxWidth;
+          }
+        } else {
+          if (height > maxHeight) {
+            width = Math.round((width * maxHeight) / height);
+            height = maxHeight;
+          }
+        }
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx?.drawImage(img, 0, 0, width, height);
+        resolve(canvas.toDataURL('image/jpeg', 0.8));
+      };
+      img.onerror = (err) => reject(err);
+    };
+    reader.onerror = (err) => reject(err);
+  });
+}
 
 export function EmployerProfilePage() {
   const [profile, setProfile] = useState<any>(null);
@@ -10,6 +45,7 @@ export function EmployerProfilePage() {
   const [error, setError] = useState<string | null>(null);
   const [saveState, setSaveState] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
   const { toast } = useToast();
+  const { refreshUser } = useAuth();
 
   useEffect(() => {
     api.get('/profiles/employer/me')
@@ -25,7 +61,7 @@ export function EmployerProfilePage() {
       const res = await api.put('/profiles/employer/me', {
         businessName: profile.businessName,
         email: profile.email || profile.user?.email,
-        avatarUrl: profile.avatarUrl || profile.user?.avatarUrl,
+        avatarUrl: profile.avatarUrl !== undefined ? profile.avatarUrl : profile.user?.avatarUrl,
         businessDescription: profile.businessDescription,
         contactPersonName: profile.contactPersonName,
         contactPhone: profile.contactPhone,
@@ -33,6 +69,7 @@ export function EmployerProfilePage() {
         gstin: profile.gstin,
       });
       setProfile(res.data.data);
+      await refreshUser();
       setSaveState('saved');
       toast('Employer business profile updated successfully!', 'success');
     } catch {
@@ -44,6 +81,8 @@ export function EmployerProfilePage() {
   if (isLoading) return <DashboardLayout links={EMPLOYER_NAV_LINKS}><LoadingState /></DashboardLayout>;
   if (error) return <DashboardLayout links={EMPLOYER_NAV_LINKS}><ErrorState message={error} /></DashboardLayout>;
 
+  const currentAvatar = profile.avatarUrl || profile.user?.avatarUrl;
+
   return (
     <DashboardLayout links={EMPLOYER_NAV_LINKS} breadcrumbs={[{ label: 'Employer', href: '/employer/dashboard' }, { label: 'Business Profile' }]}>
       <SectionHeader title="Employer Business Profile" subtitle="Manage your company information, contact person, and GST details." />
@@ -52,15 +91,15 @@ export function EmployerProfilePage() {
         <Card>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20, flexWrap: 'wrap', gap: 12 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-              {profile.avatarUrl || profile.user?.avatarUrl ? (
+              {currentAvatar ? (
                 <img
-                  src={profile.avatarUrl || profile.user?.avatarUrl}
+                  src={currentAvatar}
                   alt={profile.businessName || 'Employer'}
                   style={{ width: 50, height: 50, borderRadius: 12, objectFit: 'cover', border: '2px solid var(--border)' }}
                 />
               ) : (
                 <div style={{ width: 50, height: 50, borderRadius: 12, background: '#e0f2fe', color: '#0284c7', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 20 }}>
-                  🏢
+                  {(profile.businessName?.[0] ?? '🏢').toUpperCase()}
                 </div>
               )}
               <div>
@@ -75,26 +114,29 @@ export function EmployerProfilePage() {
             {/* Profile Avatar Photo Selector */}
             <FormGroup label="Company Logo / Avatar Photo">
               <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-                {profile.avatarUrl || profile.user?.avatarUrl ? (
+                {currentAvatar ? (
                   <img
-                    src={profile.avatarUrl || profile.user?.avatarUrl}
+                    src={currentAvatar}
                     alt="Logo"
                     style={{ width: 56, height: 56, borderRadius: 12, objectFit: 'cover', border: '2px solid var(--border)' }}
                   />
                 ) : (
                   <div style={{ width: 56, height: 56, borderRadius: 12, background: '#e0f2fe', color: '#0284c7', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 22 }}>
-                    🏢
+                    {(profile.businessName?.[0] ?? '🏢').toUpperCase()}
                   </div>
                 )}
                 <input
                   type="file"
                   accept="image/*"
-                  onChange={(e) => {
+                  onChange={async (e) => {
                     const file = e.target.files?.[0];
                     if (!file) return;
-                    const r = new FileReader();
-                    r.onloadend = () => setProfile({ ...profile, avatarUrl: r.result as string });
-                    r.readAsDataURL(file);
+                    try {
+                      const compressed = await compressImage(file);
+                      setProfile({ ...profile, avatarUrl: compressed });
+                    } catch {
+                      toast('Failed to process image file', 'error');
+                    }
                   }}
                   style={{ fontSize: 13 }}
                 />
