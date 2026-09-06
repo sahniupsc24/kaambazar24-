@@ -22,7 +22,7 @@ function convertToCSV(data: any[]): string {
 }
 
 // GET /api/export/users
-router.get('/users', authenticate, authorize([UserRole.ADMIN, UserRole.SUPER_ADMIN]), async (req, res) => {
+router.get('/users', authenticate, authorize(UserRole.ADMIN, UserRole.SUPER_ADMIN), async (req, res) => {
   try {
     const users = await AppDataSource.getRepository(User).find({
       order: { createdAt: 'DESC' }
@@ -48,19 +48,21 @@ router.get('/users', authenticate, authorize([UserRole.ADMIN, UserRole.SUPER_ADM
 });
 
 // GET /api/export/audit-logs
-router.get('/audit-logs', authenticate, authorize([UserRole.ADMIN, UserRole.SUPER_ADMIN]), async (req, res) => {
+router.get('/audit-logs', authenticate, authorize(UserRole.ADMIN, UserRole.SUPER_ADMIN), async (req, res) => {
   try {
     const logs = await AppDataSource.getRepository(AuditLog).find({
-      relations: ['user'],
       order: { createdAt: 'DESC' }
     });
 
     const csvData = logs.map(l => ({
       LogID: l.id,
       Action: l.action,
-      UserEmail: l.user ? l.user.email : 'System',
-      IPAddress: l.ipAddress,
-      CreatedAt: l.createdAt.toISOString()
+      ActorUserId: l.actorUserId || 'System',
+      ActorRole: l.actorRole || 'N/A',
+      EntityType: l.entityType,
+      EntityID: l.entityId || '',
+      IPAddress: l.ipAddress || '',
+      CreatedAt: l.createdAt ? l.createdAt.toISOString() : ''
     }));
 
     const csvString = convertToCSV(csvData);
@@ -75,22 +77,20 @@ router.get('/audit-logs', authenticate, authorize([UserRole.ADMIN, UserRole.SUPE
 });
 
 // GET /api/export/payments
-router.get('/payments', authenticate, authorize([UserRole.ADMIN, UserRole.SUPER_ADMIN]), async (req, res) => {
+router.get('/payments', authenticate, authorize(UserRole.ADMIN, UserRole.SUPER_ADMIN), async (req, res) => {
   try {
     const payments = await AppDataSource.getRepository(Payment).find({
-      relations: ['payer', 'payee'],
       order: { createdAt: 'DESC' }
     });
 
     const csvData = payments.map(p => ({
       PaymentID: p.id,
+      ContractID: p.contractId,
       Amount: p.amount,
-      Currency: p.currency,
       Status: p.status,
-      PayerEmail: p.payer ? p.payer.email : '',
-      PayeeEmail: p.payee ? p.payee.email : '',
-      Reference: p.transactionReference,
-      CreatedAt: p.createdAt.toISOString()
+      Reference: p.reference || '',
+      CreatedByUserId: p.createdByUserId,
+      CreatedAt: p.createdAt ? p.createdAt.toISOString() : ''
     }));
 
     const csvString = convertToCSV(csvData);

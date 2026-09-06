@@ -34,7 +34,7 @@ router.get('/mine', authenticate, async (req, res) => {
 });
 
 // GET /api/disputes (Admin only)
-router.get('/', authenticate, authorize([UserRole.ADMIN, UserRole.SUPER_ADMIN]), async (req, res) => {
+router.get('/', authenticate, authorize(UserRole.ADMIN, UserRole.SUPER_ADMIN), async (req, res) => {
   try {
     const disputes = await disputeService.getAllDisputes();
     res.json({ success: true, data: disputes });
@@ -44,7 +44,7 @@ router.get('/', authenticate, authorize([UserRole.ADMIN, UserRole.SUPER_ADMIN]),
 });
 
 // POST /api/disputes/:id/resolve (Admin only)
-router.post('/:id/resolve', authenticate, authorize([UserRole.ADMIN, UserRole.SUPER_ADMIN]), async (req, res) => {
+router.post('/:id/resolve', authenticate, authorize(UserRole.ADMIN, UserRole.SUPER_ADMIN), async (req, res) => {
   try {
     const { resolutionStatus, notes } = req.body;
     if (!resolutionStatus || !notes) {
