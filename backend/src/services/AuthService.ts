@@ -215,6 +215,50 @@ export class AuthService {
     return AuthService.issueTokens(user);
   }
 
+  static async googleLogin(email: string, name: string, role: UserRole.WORKER | UserRole.EMPLOYER = UserRole.WORKER, avatarUrl?: string) {
+    const userRepo = AppDataSource.getRepository(User);
+    let user = await userRepo.findOne({ where: { email } });
+
+    if (!user) {
+      const randomPassword = await hashPassword(Math.random().toString(36).substring(2) + 'G#9!');
+      user = userRepo.create({
+        email,
+        passwordHash: randomPassword,
+        role,
+        isActive: true,
+        isEmailVerified: true,
+        avatarUrl: avatarUrl ?? null,
+      });
+      await userRepo.save(user);
+
+      if (role === UserRole.WORKER) {
+        const workerRepo = AppDataSource.getRepository(WorkerProfile);
+        await workerRepo.save(workerRepo.create({ userId: user.id, fullName: name }));
+      } else {
+        const employerRepo = AppDataSource.getRepository(EmployerProfile);
+        await employerRepo.save(employerRepo.create({ userId: user.id, businessName: name }));
+      }
+    } else {
+      if (avatarUrl && !user.avatarUrl) {
+        user.avatarUrl = avatarUrl;
+        await userRepo.save(user);
+      }
+    }
+
+    user.lastLoginAt = new Date();
+    await userRepo.save(user);
+
+    await AuditService.log({
+      actorUserId: user.id,
+      actorRole: user.role,
+      action: 'USER_LOGIN_GOOGLE',
+      entityType: 'User',
+      entityId: user.id,
+    });
+
+    return AuthService.issueTokens(user);
+  }
+
   private static issueTokens(user: User) {
     const accessToken = signAccessToken({ sub: user.id, role: user.role, email: user.email });
     const refreshToken = signRefreshToken({ sub: user.id });

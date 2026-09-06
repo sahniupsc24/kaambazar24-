@@ -67,4 +67,14 @@ router.post(
 
 router.get('/me', authenticate, AuthController.me);
 
+router.post(
+  '/google',
+  validate([
+    body('email').isEmail().normalizeEmail(),
+    body('name').trim().notEmpty(),
+    body('role').optional().isIn(['WORKER', 'EMPLOYER']),
+  ]),
+  AuthController.googleLogin
+);
+
 export default router;

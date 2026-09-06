@@ -5,6 +5,7 @@ import { UserRole } from '../types';
 import { ErrorState, PrimaryButton } from '../components/common/Primitives';
 import { Briefcase, Building2 } from 'lucide-react';
 import { SEOHead } from '../components/SEOHead';
+import { GoogleSignInButton } from '../components/GoogleSignInButton';
 
 export function RegisterPage() {
   const { register } = useAuth();
@@ -25,7 +26,14 @@ export function RegisterPage() {
       await register({ email, password, phone: phone || undefined, role, fullNameOrBusinessName: name });
       navigate(role === UserRole.WORKER ? '/worker/dashboard' : '/employer/dashboard');
     } catch (err: any) {
-      setError(err?.response?.data?.message ?? 'Registration failed. Please try again.');
+      const msg = err?.response?.data?.message;
+      const details = err?.response?.data?.details;
+      if (Array.isArray(details) && details.length > 0) {
+        const detailMsgs = details.map((d: any) => `${d.path || d.param || 'field'}: ${d.msg}`).join(' | ');
+        setError(`Validation error (${detailMsgs})`);
+      } else {
+        setError(msg ?? 'Registration failed. Please try again.');
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -74,6 +82,15 @@ export function RegisterPage() {
             <Building2 size={24} />
             I'm an Employer
           </button>
+        </div>
+
+        <div style={{ marginBottom: 20 }}>
+          <GoogleSignInButton role={role} label={`Sign up as ${role === UserRole.WORKER ? 'Worker' : 'Employer'} with Google`} />
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, margin: '16px 0 12px' }}>
+            <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
+            <span style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 600 }}>OR WITH EMAIL</span>
+            <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
+          </div>
         </div>
 
         <form onSubmit={handleSubmit} style={{ display: 'grid', gap: 16 }}>

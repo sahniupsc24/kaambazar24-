@@ -5,7 +5,6 @@ import { AuthUser, UserRole } from '../types';
 interface AuthContextValue {
   user: AuthUser | null;
   isLoading: boolean;
-  // Worker/Employer password login — identifier can be email or phone.
   loginWithPassword: (identifier: string, password: string) => Promise<AuthUser>;
   requestOtp: (phone: string) => Promise<void>;
   verifyOtp: (phone: string, code: string) => Promise<AuthUser>;
@@ -17,6 +16,7 @@ interface AuthContextValue {
     role: UserRole.WORKER | UserRole.EMPLOYER;
     fullNameOrBusinessName: string;
   }) => Promise<void>;
+  loginWithGoogle: (email: string, name: string, role?: UserRole.WORKER | UserRole.EMPLOYER, avatarUrl?: string) => Promise<AuthUser>;
   logout: () => void;
 }
 
@@ -81,6 +81,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     applySession(res.data.data, setUser);
   }
 
+  async function loginWithGoogle(email: string, name: string, role?: UserRole.WORKER | UserRole.EMPLOYER, avatarUrl?: string): Promise<AuthUser> {
+    const res = await api.post('/auth/google', { email, name, role, avatarUrl });
+    applySession(res.data.data, setUser);
+    return res.data.data.user;
+  }
+
   function logout() {
     localStorage.removeItem('accessToken');
     localStorage.removeItem('refreshToken');
@@ -89,7 +95,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   return (
     <AuthContext.Provider
-      value={{ user, isLoading, loginWithPassword, requestOtp, verifyOtp, adminLogin, register, logout }}
+      value={{ user, isLoading, loginWithPassword, requestOtp, verifyOtp, adminLogin, register, loginWithGoogle, logout }}
     >
       {children}
     </AuthContext.Provider>

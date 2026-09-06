@@ -76,4 +76,13 @@ export const AuthController = {
     // never trusted from client input.
     res.status(200).json({ success: true, data: req.user });
   }),
+
+  googleLogin: asyncHandler(async (req: Request, res: Response) => {
+    const { email, name, role, avatarUrl } = req.body;
+    if (!email || !name) {
+      throw ApiError.badRequest('Email and name are required for Google login');
+    }
+    const result = await AuthService.googleLogin(email, name, role, avatarUrl);
+    res.status(200).json({ success: true, data: result });
+  }),
 };
