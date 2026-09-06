@@ -12,13 +12,16 @@ function required(name: string, fallback?: string): string {
 // Parse it if present; otherwise fall back to individual DB_* vars.
 function parseDbUrl(url: string) {
   const parsed = new URL(url);
+  const sslParam = parsed.searchParams.get('sslmode');
+  const isInternal = parsed.hostname.includes('railway.internal') || parsed.hostname === 'localhost' || parsed.hostname === '127.0.0.1';
+  const useSsl = process.env.DB_SSL === 'true' || (sslParam === 'require' && !isInternal);
   return {
     host: parsed.hostname,
     port: parseInt(parsed.port || '5432', 10),
     username: decodeURIComponent(parsed.username),
     password: decodeURIComponent(parsed.password),
     database: parsed.pathname.replace(/^\//, ''),
-    ssl: parsed.searchParams.get('sslmode') !== 'disable',
+    ssl: useSsl,
   };
 }
 
