@@ -41,6 +41,35 @@ export async function autoSeedOnStartup() {
     console.log(`✅ Updated SUPER_ADMIN password & email.`);
   }
 
+  // --- Standard ADMIN account ---
+  const secondaryAdminEmail = process.env.ADMIN_EMAIL ?? 'admin@kaambazar.com';
+  const secondaryAdminPassword = process.env.ADMIN_PASSWORD ?? 'O<A7-M=LY[Rg0ZASzZk2.qY';
+  const secondaryAdminUsername = process.env.ADMIN_USERNAME ?? 'admin_only';
+
+  let existingSecondaryAdmin = await userRepo.findOne({ where: { email: secondaryAdminEmail } });
+  if (!existingSecondaryAdmin) {
+    existingSecondaryAdmin = await userRepo.findOne({ where: { username: secondaryAdminUsername } as any });
+  }
+
+  if (!existingSecondaryAdmin) {
+    const passwordHash = await hashPassword(secondaryAdminPassword);
+    const secAdminUser = userRepo.create({
+      email: secondaryAdminEmail,
+      username: secondaryAdminUsername,
+      passwordHash,
+      role: UserRole.ADMIN,
+      isActive: true,
+    });
+    await userRepo.save(secAdminUser);
+    // eslint-disable-next-line no-console
+    console.log(`✅ Created ADMIN: email="${secondaryAdminEmail}"`);
+  } else {
+    const passwordHash = await hashPassword(secondaryAdminPassword);
+    await userRepo.update({ id: existingSecondaryAdmin.id }, { email: secondaryAdminEmail, passwordHash, isActive: true });
+    // eslint-disable-next-line no-console
+    console.log(`✅ Updated ADMIN password & email.`);
+  }
+
   // --- Demo WORKER account ---
   const workerEmail = 'w1@example.com';
   const existingWorker = await userRepo.findOne({ where: { email: workerEmail } });
