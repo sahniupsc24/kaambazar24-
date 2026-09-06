@@ -41,10 +41,9 @@ export function createApp() {
     origin: (origin, callback) => {
       if (!origin) return callback(null, true);
       if (
-        origin === env.corsOrigin ||
-        origin === 'http://localhost:5173' ||
-        origin === 'http://localhost:3000' ||
-        origin.endsWith('.vercel.app')
+        env.corsOrigins.includes(origin) ||
+        origin.endsWith('.vercel.app') ||
+        origin.includes('localhost')
       ) {
         return callback(null, true);
       }

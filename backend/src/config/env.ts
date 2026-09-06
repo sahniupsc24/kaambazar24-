@@ -46,7 +46,14 @@ export const env = {
     refreshExpiresIn: process.env.JWT_REFRESH_EXPIRES_IN ?? '7d',
   },
 
-  corsOrigin: process.env.FRONTEND_URL ?? process.env.CORS_ORIGIN ?? 'http://localhost:5173',
+  corsOrigins: Array.from(
+    new Set(
+      `${process.env.CORS_ORIGIN || ''},${process.env.FRONTEND_URL || ''},http://localhost:5173,http://localhost:3000,https://kaam-bazar-three.vercel.app`
+        .split(',')
+        .map((s) => s.trim())
+        .filter(Boolean)
+    )
+  ),
 
   razorpay: {
     webhookSecret: process.env.RAZORPAY_WEBHOOK_SECRET ?? '',

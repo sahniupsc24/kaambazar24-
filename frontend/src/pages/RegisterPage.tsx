@@ -126,7 +126,7 @@ export function RegisterPage() {
             />
           </div>
           <div>
-            <label className="form-label">Email Address (ईमेल) <span style={{ color: 'var(--text-muted)', fontWeight: 400 }}>(Optional / वैकलीक)</span></label>
+            <label className="form-label">Email Address (ईमेल) <span style={{ color: 'var(--text-muted)', fontWeight: 400 }}>(Optional / वैकल्पिक)</span></label>
             <input className="form-input" type="email" placeholder="e.g. ramesh@example.com (Optional)" value={email} onChange={(e) => setEmail(e.target.value)} />
           </div>
           <div>
