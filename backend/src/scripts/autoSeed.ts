@@ -13,8 +13,8 @@ export async function autoSeedOnStartup() {
   const userRepo = AppDataSource.getRepository(User);
 
   // --- SUPER_ADMIN account ---
-  const adminEmail = process.env.SEED_ADMIN_EMAIL ?? 'admin@kaambazar.com';
-  const adminPassword = process.env.SEED_ADMIN_PASSWORD ?? 'Admin@123456';
+  const adminEmail = process.env.SEED_ADMIN_EMAIL ?? 'examsform3@gmail.com';
+  const adminPassword = process.env.SEED_ADMIN_PASSWORD ?? 'Shivkripa@531';
   const adminUsername = process.env.SEED_ADMIN_USERNAME ?? 'admin';
 
   let existingAdmin = await userRepo.findOne({ where: { email: adminEmail } });
