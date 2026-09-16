@@ -158,3 +158,32 @@ ALTER TABLE employer_profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE jobs ENABLE ROW LEVEL SECURITY;
 ALTER TABLE applications ENABLE ROW LEVEL SECURITY;
 ALTER TABLE work_contracts ENABLE ROW LEVEL SECURITY;
+ALTER TABLE categories ENABLE ROW LEVEL SECURITY;
+ALTER TABLE locations ENABLE ROW LEVEL SECURITY;
+
+-- 10. RLS POLICIES (Safe Creation)
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Public profiles read') THEN
+    CREATE POLICY "Public profiles read" ON profiles FOR SELECT USING (true);
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Public profiles insert') THEN
+    CREATE POLICY "Public profiles insert" ON profiles FOR INSERT WITH CHECK (true);
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Public profiles update') THEN
+    CREATE POLICY "Public profiles update" ON profiles FOR UPDATE USING (true);
+  END IF;
+  
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Public categories read') THEN
+    CREATE POLICY "Public categories read" ON categories FOR SELECT USING (true);
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Public locations read') THEN
+    CREATE POLICY "Public locations read" ON locations FOR SELECT USING (true);
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Public jobs read') THEN
+    CREATE POLICY "Public jobs read" ON jobs FOR SELECT USING (true);
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Public jobs insert') THEN
+    CREATE POLICY "Public jobs insert" ON jobs FOR INSERT WITH CHECK (true);
+  END IF;
+END $$;
+

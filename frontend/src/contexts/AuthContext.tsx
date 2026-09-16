@@ -4,7 +4,8 @@ import { api } from '../api/client';
 import { AuthUser, UserRole } from '../types';
 
 // ✅ Admin emails — auto SUPER_ADMIN role diya jayega
-const ADMIN_EMAILS = ['satyamsahani293@gmail.com', 'examsform3@gmail.com'];
+const ADMIN_EMAILS = ['satyamsahani293@gmail.com', 'examsform3@gmail.com', 'sahniupsc24@gmail.com'];
+
 
 interface AuthContextValue {
   user: AuthUser | null;

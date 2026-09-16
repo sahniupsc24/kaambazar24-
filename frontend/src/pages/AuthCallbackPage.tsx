@@ -2,7 +2,8 @@ import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 
-const ADMIN_EMAILS = ['satyamsahani293@gmail.com', 'examsform3@gmail.com'];
+const ADMIN_EMAILS = ['satyamsahani293@gmail.com', 'examsform3@gmail.com', 'sahniupsc24@gmail.com'];
+
 
 export function AuthCallbackPage() {
   const navigate = useNavigate();
