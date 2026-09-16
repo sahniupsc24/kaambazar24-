@@ -9,21 +9,24 @@ export function MandatoryPhoneModal() {
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Show only if user is logged in, NOT admin, and does NOT have a valid phone number
-  const needsPhone =
-    user &&
-    user.role !== 'ADMIN' &&
-    user.role !== 'SUPER_ADMIN' &&
-    (!user.phone || user.phone.includes('@kaambazar.app') || user.phone.length < 10);
+  // Check if user already has a valid 10-digit Indian phone number
+  const cleanPhone = user?.phone ? user.phone.replace(/\D/g, '').slice(-10) : '';
+  const hasValidPhone = /^[6-9]\d{9}$/.test(cleanPhone);
+
+  // Show modal ONLY if:
+  // 1. User is logged in
+  // 2. User is NOT Admin/Super Admin
+  // 3. User does NOT have a valid mobile number (e.g. logged in via Google/Email without phone)
+  const needsPhone = user && user.role !== 'ADMIN' && user.role !== 'SUPER_ADMIN' && !hasValidPhone;
 
   if (!needsPhone) return null;
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     setError('');
-    const cleanPhone = phone.trim().replace(/\D/g, '');
+    const inputPhone = phone.trim().replace(/\D/g, '');
 
-    if (!/^[6-9]\d{9}$/.test(cleanPhone)) {
+    if (!/^[6-9]\d{9}$/.test(inputPhone)) {
       setError('Please enter a valid 10-digit Indian mobile number (starting with 6, 7, 8, or 9)');
       return;
     }
@@ -34,7 +37,7 @@ export function MandatoryPhoneModal() {
       if (session?.user) {
         const { error: updateErr } = await supabase
           .from('profiles')
-          .update({ phone: cleanPhone })
+          .update({ phone: inputPhone })
           .eq('id', session.user.id);
 
         if (updateErr) throw updateErr;
