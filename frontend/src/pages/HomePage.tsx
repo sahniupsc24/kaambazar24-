@@ -1,17 +1,61 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { api } from '../api/client';
+import { supabase } from '../lib/supabase';
 import { Job } from '../types';
 import { JobCard } from '../components/JobCard';
 import { PrimaryButton, SecondaryButton } from '../components/common/Primitives';
 import { SEOHead } from '../components/SEOHead';
 import { WebSiteSchema } from '../components/SchemaJsonLd';
-
 import { 
   Search, HardHat, Droplets, Zap, Paintbrush, Hammer, 
   Flame, Broom, ChefHat, Car, Shield, Truck, Factory,
   User, FileText, CreditCard, Building2, Briefcase
 } from 'lucide-react';
+
+const SAMPLE_FEATURED_JOBS: Job[] = [
+  {
+    id: 'job-1',
+    title: 'Experienced Plumber Needed for Commercial Site',
+    description: 'Looking for a certified plumber with 3+ years experience in pipe fitting, leak repair, and drainage layout for a commercial building project in Connaught Place, New Delhi.',
+    requirements: 'Must have own basic tools, PVC/GI pipe fitting knowledge, and safety boots.',
+    workType: 'FULL_TIME',
+    compensationType: 'DAILY',
+    compensationRate: '950',
+    status: 'OPEN',
+    category: { id: 'cat-plumbing', name: 'Plumbing', slug: 'plumbing' },
+    location: { id: 'loc-delhi', name: 'New Delhi (Delhi)', level: 'city', slug: 'delhi' },
+    employerProfile: { id: 'emp-1', businessName: 'BuildCon Infrastructure', isVerified: true },
+    createdAt: new Date().toISOString(),
+  },
+  {
+    id: 'job-2',
+    title: 'Electrician Required for Residential Wiring',
+    description: 'Urgent requirement for an electrician to complete 3BHK flat internal wiring, DB box installation, and LED panel fitting in Sector 62, Noida.',
+    requirements: 'Single & three-phase wiring expertise, circuit testing knowledge.',
+    workType: 'CONTRACT',
+    compensationType: 'FIXED',
+    compensationRate: '4500',
+    status: 'OPEN',
+    category: { id: 'cat-electrical', name: 'Electrical Work', slug: 'electrical-work' },
+    location: { id: 'loc-noida', name: 'Noida (UP)', level: 'city', slug: 'noida' },
+    employerProfile: { id: 'emp-2', businessName: 'Apex Interior Solutions', isVerified: true },
+    createdAt: new Date().toISOString(),
+  },
+  {
+    id: 'job-3',
+    title: 'Daily Construction Masons & Helpers (10 Openings)',
+    description: 'Requirement for 5 skilled Masons (Rajmistri) and 5 Labour Helpers for brickwork and plastering work at residential site in Gurgaon Sector 56.',
+    requirements: 'Punctuality, daily wage payment guaranteed at 6:00 PM.',
+    workType: 'CONTRACT',
+    compensationType: 'DAILY',
+    compensationRate: '850',
+    status: 'OPEN',
+    category: { id: 'cat-construction', name: 'Construction', slug: 'construction-building' },
+    location: { id: 'loc-gurgaon', name: 'Gurgaon (Haryana)', level: 'city', slug: 'gurgaon' },
+    employerProfile: { id: 'emp-3', businessName: 'Shree Ram Builders', isVerified: true },
+    createdAt: new Date().toISOString(),
+  },
+];
 
 export function HomePage() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -20,14 +64,45 @@ export function HomePage() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    api
-      .get('/jobs')
-      .then((res) => {
-        const jobsList: Job[] = res.data.data.items || res.data.data || [];
-        setFeaturedJobs(jobsList.slice(0, 6));
-      })
-      .catch(() => setFeaturedJobs([]))
-      .finally(() => setIsLoading(false));
+    async function loadFeatured() {
+      try {
+        const { data, error } = await supabase
+          .from('jobs')
+          .select(`
+            *,
+            category:categories(id, name, slug),
+            location:locations(id, name, city, state),
+            employer:employer_profiles(id, company_name, contact_person)
+          `)
+          .order('created_at', { ascending: false })
+          .limit(6);
+
+        if (!error && data && data.length > 0) {
+          const mapped: Job[] = data.map((j: any) => ({
+            id: j.id,
+            title: j.title,
+            description: j.description,
+            requirements: j.requirements,
+            workType: j.work_type,
+            compensationType: j.compensation_type,
+            compensationRate: String(j.compensation_rate),
+            status: j.status,
+            category: j.category ? { id: j.category.id, name: j.category.name, slug: j.category.slug } : { id: 'cat-gen', name: 'General', slug: 'general' },
+            location: j.location ? { id: j.location.id, name: j.location.name, level: 'city', slug: j.location.city } : { id: 'loc-gen', name: 'India', level: 'country' },
+            employerProfile: j.employer ? { id: j.employer.id, businessName: j.employer.company_name, isVerified: true } : undefined,
+            createdAt: j.created_at,
+          }));
+          setFeaturedJobs(mapped);
+        } else {
+          setFeaturedJobs(SAMPLE_FEATURED_JOBS);
+        }
+      } catch {
+        setFeaturedJobs(SAMPLE_FEATURED_JOBS);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    loadFeatured();
   }, []);
 
   function handleSearch(e: React.FormEvent) {
