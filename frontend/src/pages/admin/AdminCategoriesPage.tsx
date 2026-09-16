@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { api } from '../../api/client';
+import { supabase } from '../../lib/supabase';
 import { DashboardLayout } from '../../layouts/DashboardLayout';
 import { DataTable, Column, SectionHeader, PrimaryButton, SecondaryButton, Modal, FormGroup, Input, Select, ConfirmDialog, StatusBadge, useToast } from '../../components/common/Primitives';
 import { ADMIN_LINKS } from './adminLinks';
@@ -18,10 +18,14 @@ export function AdminCategoriesPage() {
   async function load() {
     try {
       setLoading(true);
-      const res = await api.get('/admin/categories');
-      setCategories(res.data.data ?? []);
-    } catch {
-      toast('Failed to load categories', 'error');
+      const { data, error } = await supabase
+        .from('categories')
+        .select('id, name, description, slug, is_active')
+        .order('name');
+      if (error) throw error;
+      setCategories((data || []).map((c: any) => ({ id: c.id, name: c.name, description: c.description, slug: c.slug, isActive: c.is_active })));
+    } catch (e: any) {
+      toast('Failed to load categories: ' + (e?.message || 'Unknown'), 'error');
     } finally {
       setLoading(false);
     }
@@ -34,18 +38,19 @@ export function AdminCategoriesPage() {
     setSubmitting(true);
     try {
       if (editCat) {
-        await api.put(`/admin/categories/${editCat.id}`, form);
+        const { error } = await supabase.from('categories').update({ name: form.name, description: form.description, is_active: form.isActive }).eq('id', editCat.id);
+        if (error) throw error;
         toast('Category updated', 'success');
       } else {
-        await api.post('/admin/categories', form);
+        const { error } = await supabase.from('categories').insert([{ name: form.name, description: form.description, is_active: form.isActive, slug: form.name.toLowerCase().replace(/[^a-z0-9]+/g, '-') }]);
+        if (error) throw error;
         toast('Category created', 'success');
       }
-      setShowAdd(false);
-      setEditCat(null);
+      setShowAdd(false); setEditCat(null);
       setForm({ name: '', description: '', isActive: true });
       load();
-    } catch {
-      toast('Save failed', 'error');
+    } catch (e: any) {
+      toast('Save failed: ' + (e?.message || 'Unknown'), 'error');
     } finally {
       setSubmitting(false);
     }
@@ -53,20 +58,22 @@ export function AdminCategoriesPage() {
 
   async function toggleActive(cat: any) {
     try {
-      await api.put(`/admin/categories/${cat.id}`, { isActive: !cat.isActive });
+      const { error } = await supabase.from('categories').update({ is_active: !cat.isActive }).eq('id', cat.id);
+      if (error) throw error;
       toast(`Category ${cat.isActive ? 'deactivated' : 'activated'}`, 'success');
       load();
-    } catch {
-      toast('Failed to update status', 'error');
+    } catch (e: any) {
+      toast('Failed to update status: ' + (e?.message || ''), 'error');
     }
   }
 
   async function handleDelete(id: string) {
     try {
-      await api.delete(`/admin/categories/${id}`);
+      const { error } = await supabase.from('categories').delete().eq('id', id);
+      if (error) throw error;
       toast('Category deleted', 'success');
       load();
-    } catch {
+    } catch (e: any) {
       toast('Delete failed — jobs may reference this category', 'error');
     }
   }

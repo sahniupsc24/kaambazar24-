@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { api } from '../../api/client';
 import { DashboardLayout } from '../../layouts/DashboardLayout';
 import { DataTable, Column, SectionHeader, StatusBadge, StatCard, Tabs, useToast } from '../../components/common/Primitives';
 import { ADMIN_LINKS } from './adminLinks';
@@ -12,21 +11,12 @@ export function AdminPaymentsPage() {
   const { toast } = useToast();
 
   useEffect(() => {
-    async function load() {
-      try {
-        const [payRes, unlockRes] = await Promise.all([
-          api.get('/admin/payments?pageSize=200'),
-          api.get('/admin/contact-unlocks?pageSize=200').catch(() => ({ data: { data: [] } })),
-        ]);
-        setPayments(payRes.data.data?.items ?? payRes.data.data ?? []);
-        setContactUnlocks(unlockRes.data.data?.items ?? unlockRes.data.data ?? []);
-      } catch {
-        toast('Failed to load payments', 'error');
-      } finally {
-        setLoading(false);
-      }
-    }
-    load();
+    // Payments table not yet in schema — load empty
+    // When a payments table is added to Supabase, replace this with:
+    // const { data } = await supabase.from('payments').select('*').order('created_at', { ascending: false });
+    setPayments([]);
+    setContactUnlocks([]);
+    setLoading(false);
   }, []);
 
   const totalRevenue = payments.filter((p) => p.status === 'PAID').reduce((sum, p) => sum + Number(p.amount ?? 0), 0);

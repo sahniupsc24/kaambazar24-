@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "appear": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@appear/mcp-server"
+      ]
+    }
+  }
+}

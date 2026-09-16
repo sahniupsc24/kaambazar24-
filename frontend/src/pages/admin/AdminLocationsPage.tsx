@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { api } from '../../api/client';
+import { supabase } from '../../lib/supabase';
 import { DashboardLayout } from '../../layouts/DashboardLayout';
 import { DataTable, Column, SectionHeader, PrimaryButton, SecondaryButton, Modal, FormGroup, Input, Select, ConfirmDialog, StatusBadge, useToast } from '../../components/common/Primitives';
 import { ADMIN_LINKS } from './adminLinks';
@@ -18,10 +18,17 @@ export function AdminLocationsPage() {
   async function load() {
     try {
       setLoading(true);
-      const res = await api.get('/admin/locations');
-      setLocations(res.data.data ?? []);
-    } catch {
-      toast('Failed to load locations', 'error');
+      const { data, error } = await supabase
+        .from('locations')
+        .select('id, name, city, state, country, slug, is_active')
+        .order('name');
+      if (error) throw error;
+      setLocations((data || []).map((l: any) => ({
+        id: l.id, name: l.name, city: l.city, state: l.state, country: l.country,
+        slug: l.slug, isActive: l.is_active, level: l.state ? 'CITY' : 'STATE',
+      })));
+    } catch (e: any) {
+      toast('Failed to load locations: ' + (e?.message || 'Unknown'), 'error');
     } finally {
       setLoading(false);
     }
@@ -33,13 +40,21 @@ export function AdminLocationsPage() {
     if (!form.name.trim()) { toast('Name is required', 'error'); return; }
     setSubmitting(true);
     try {
-      await api.post('/admin/locations', { name: form.name, level: form.level, parentId: form.parentId || undefined });
+      const { error } = await supabase.from('locations').insert([{
+        name: form.name,
+        city: form.level === 'CITY' ? form.name : null,
+        state: form.level === 'STATE' ? form.name : null,
+        country: 'India',
+        is_active: true,
+        slug: form.name.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+      }]);
+      if (error) throw error;
       toast('Location added', 'success');
       setShowAdd(false);
       setForm({ name: '', level: 'CITY', parentId: '', isActive: true });
       load();
-    } catch {
-      toast('Failed to add location', 'error');
+    } catch (e: any) {
+      toast('Failed to add location: ' + (e?.message || ''), 'error');
     } finally {
       setSubmitting(false);
     }
@@ -49,18 +64,14 @@ export function AdminLocationsPage() {
     if (!editLoc || !form.name.trim()) { toast('Name is required', 'error'); return; }
     setSubmitting(true);
     try {
-      await api.put(`/admin/locations/${editLoc.id}`, {
-        name: form.name,
-        level: form.level,
-        parentId: form.parentId || null,
-        isActive: form.isActive,
-      });
+      const { error } = await supabase.from('locations').update({ name: form.name, is_active: form.isActive }).eq('id', editLoc.id);
+      if (error) throw error;
       toast('Location updated', 'success');
       setEditLoc(null);
       setForm({ name: '', level: 'CITY', parentId: '', isActive: true });
       load();
-    } catch {
-      toast('Failed to update location', 'error');
+    } catch (e: any) {
+      toast('Failed to update: ' + (e?.message || ''), 'error');
     } finally {
       setSubmitting(false);
     }
@@ -68,22 +79,20 @@ export function AdminLocationsPage() {
 
   async function toggleActive(loc: any) {
     try {
-      await api.put(`/admin/locations/${loc.id}`, { isActive: !loc.isActive });
+      const { error } = await supabase.from('locations').update({ is_active: !loc.isActive }).eq('id', loc.id);
+      if (error) throw error;
       toast(`Location ${loc.isActive ? 'deactivated' : 'activated'}`, 'success');
       load();
-    } catch {
-      toast('Failed to update status', 'error');
-    }
+    } catch (e: any) { toast('Failed to update status', 'error'); }
   }
 
   async function handleDelete(id: string) {
     try {
-      await api.delete(`/admin/locations/${id}`);
+      const { error } = await supabase.from('locations').delete().eq('id', id);
+      if (error) throw error;
       toast('Location deleted', 'success');
       load();
-    } catch {
-      toast('Delete failed', 'error');
-    }
+    } catch { toast('Delete failed', 'error'); }
   }
 
   function openEdit(loc: any) {

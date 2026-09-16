@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { api } from '../../api/client';
+import { supabase } from '../../lib/supabase';
 import { DashboardLayout } from '../../layouts/DashboardLayout';
 import { DataTable, Column, SectionHeader, StatusBadge, ConfirmDialog, Modal, FormGroup, Input, Select, PrimaryButton, SecondaryButton, useToast } from '../../components/common/Primitives';
 import { ADMIN_LINKS } from './adminLinks';
@@ -26,10 +26,21 @@ export function AdminJobsPage() {
   async function load() {
     try {
       setLoading(true);
-      const res = await api.get('/admin/jobs?pageSize=200');
-      setJobs(res.data.data?.items ?? res.data.data ?? []);
-    } catch {
-      toast('Failed to load jobs', 'error');
+      const { data, error } = await supabase
+        .from('jobs')
+        .select('id, title, description, status, compensation_rate, compensation_type, is_featured, created_at, categories(name), locations(name), employer_profiles(company_name)')
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      setJobs((data || []).map((j: any) => ({
+        id: j.id, title: j.title, description: j.description,
+        status: j.status, compensationRate: j.compensation_rate,
+        isFeatured: j.is_featured, createdAt: j.created_at,
+        category: { name: j.categories?.name },
+        location: { name: j.locations?.name },
+        employerProfile: { businessName: j.employer_profiles?.company_name },
+      })));
+    } catch (e: any) {
+      toast('Failed to load jobs: ' + (e?.message || 'Unknown'), 'error');
     } finally {
       setLoading(false);
     }
@@ -39,11 +50,12 @@ export function AdminJobsPage() {
 
   async function handleDelete(job: any) {
     try {
-      await api.delete(`/admin/jobs/${job.id}`);
+      const { error } = await supabase.from('jobs').delete().eq('id', job.id);
+      if (error) throw error;
       toast('Job deleted', 'success');
       load();
-    } catch {
-      toast('Delete failed', 'error');
+    } catch (e: any) {
+      toast('Delete failed: ' + (e?.message || 'Unknown'), 'error');
     }
   }
 
@@ -62,18 +74,19 @@ export function AdminJobsPage() {
     if (!editJob || !editForm.title.trim()) { toast('Job title is required', 'error'); return; }
     setSubmitting(true);
     try {
-      await api.put(`/admin/jobs/${editJob.id}`, {
+      const { error } = await supabase.from('jobs').update({
         title: editForm.title,
         description: editForm.description,
-        compensationRate: editForm.compensationRate,
+        compensation_rate: editForm.compensationRate ? parseFloat(editForm.compensationRate) : null,
         status: editForm.status,
-        isFeatured: editForm.isFeatured,
-      });
+        is_featured: editForm.isFeatured,
+      }).eq('id', editJob.id);
+      if (error) throw error;
       toast('Job post updated successfully', 'success');
       setEditJob(null);
       load();
-    } catch {
-      toast('Failed to update job post', 'error');
+    } catch (e: any) {
+      toast('Failed to update: ' + (e?.message || 'Unknown'), 'error');
     } finally {
       setSubmitting(false);
     }
