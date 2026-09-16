@@ -4,6 +4,8 @@ import { useAuth } from '../contexts/AuthContext';
 import { api } from '../api/client';
 import { ErrorState, PrimaryButton, SecondaryButton } from '../components/common/Primitives';
 import { SEOHead } from '../components/SEOHead';
+import { supabase } from '../lib/supabase';
+
 
 type Mode = 'password' | 'otp';
 
@@ -358,37 +360,34 @@ export function LoginPage() {
 }
 
 function ForgotPasswordModal({ onClose }: { onClose: () => void }) {
-  const [step, setStep] = useState<1 | 2>(1);
   const [ident, setIdent] = useState('');
-  const [code, setCode] = useState('');
-  const [newPass, setNewPass] = useState('');
   const [loading, setLoading] = useState(false);
   const [msg, setMsg] = useState<{ type: 'error' | 'success'; text: string } | null>(null);
 
-  const handleRequestOtp = async (e: React.FormEvent) => {
+  const handleRequestReset = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setMsg(null);
-    try {
-      await api.post('/auth/forgot-password/request-otp', { identifier: ident });
-      setStep(2);
-    } catch (err: any) {
-      setMsg({ type: 'error', text: err.response?.data?.message || 'Could not send OTP. Account not found.' });
-    } finally {
-      setLoading(false);
-    }
-  };
 
-  const handleResetPassword = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    setMsg(null);
+    const cleanInput = ident.trim();
+    const emailToUse = /^[6-9]\d{9}$/.test(cleanInput) ? `${cleanInput}@kaambazar.app` : cleanInput;
+
     try {
-      await api.post('/auth/forgot-password/reset', { identifier: ident, code, newPassword: newPass });
-      setMsg({ type: 'success', text: 'Password reset successfully! You can now log in.' });
-      setTimeout(onClose, 2000);
+      const { error } = await supabase.auth.resetPasswordForEmail(emailToUse, {
+        redirectTo: `${window.location.origin}/update-password`,
+      });
+
+      if (error) throw error;
+
+      setMsg({
+        type: 'success',
+        text: '📩 Password reset link sent to your email! Please check your inbox and click the link to reset your password.',
+      });
     } catch (err: any) {
-      setMsg({ type: 'error', text: err.response?.data?.message || 'Failed to reset password.' });
+      setMsg({
+        type: 'error',
+        text: err?.message || 'Could not send reset link. Please check your email and try again.',
+      });
     } finally {
       setLoading(false);
     }
@@ -427,47 +426,24 @@ function ForgotPasswordModal({ onClose }: { onClose: () => void }) {
           </div>
         )}
 
-        {step === 1 ? (
-          <form onSubmit={handleRequestOtp} style={{ display: 'grid', gap: 14 }}>
-            <p style={{ fontSize: 13, color: 'var(--text-muted)', margin: 0 }}>
-              Apna registered Email ya Mobile number enter karo.
-            </p>
-            <input
-              type="text"
-              placeholder="e.g. 9876543210 or user@example.com"
-              required
-              value={ident}
-              onChange={(e) => setIdent(e.target.value)}
-              style={{ width: '100%', padding: '10px 14px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--bg-input)', color: 'var(--text-main)', fontSize: 14 }}
-            />
-            <PrimaryButton type="submit" disabled={loading}>
-              {loading ? 'Sending Code...' : '📩 Request Reset OTP'}
-            </PrimaryButton>
-          </form>
-        ) : (
-          <form onSubmit={handleResetPassword} style={{ display: 'grid', gap: 14 }}>
-            <input
-              type="text"
-              placeholder="Enter 6-digit OTP"
-              required maxLength={6}
-              value={code}
-              onChange={(e) => setCode(e.target.value)}
-              style={{ width: '100%', padding: '10px 14px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--bg-input)', color: 'var(--text-main)', fontSize: 16, textAlign: 'center', letterSpacing: 4 }}
-            />
-            <input
-              type="password"
-              placeholder="New Password (min 6 chars)"
-              required minLength={6}
-              value={newPass}
-              onChange={(e) => setNewPass(e.target.value)}
-              style={{ width: '100%', padding: '10px 14px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--bg-input)', color: 'var(--text-main)', fontSize: 14 }}
-            />
-            <PrimaryButton type="submit" disabled={loading}>
-              {loading ? 'Updating Password...' : '🔒 Reset Password Now'}
-            </PrimaryButton>
-          </form>
-        )}
+        <form onSubmit={handleRequestReset} style={{ display: 'grid', gap: 14 }}>
+          <p style={{ fontSize: 13, color: 'var(--text-muted)', margin: 0 }}>
+            Apna registered Email ya Mobile number enter karo. Reset link aapke email par bhej diya jayega.
+          </p>
+          <input
+            type="text"
+            placeholder="e.g. 9876543210 or user@example.com"
+            required
+            value={ident}
+            onChange={(e) => setIdent(e.target.value)}
+            style={{ width: '100%', padding: '10px 14px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--bg-input)', color: 'var(--text-main)', fontSize: 14, boxSizing: 'border-box' }}
+          />
+          <PrimaryButton type="submit" disabled={loading}>
+            {loading ? 'Sending Reset Link...' : '📩 Send Reset Link'}
+          </PrimaryButton>
+        </form>
       </div>
     </div>
   );
 }
+

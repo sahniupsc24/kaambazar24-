@@ -115,7 +115,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     refreshUser().finally(() => setIsLoading(false));
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === 'PASSWORD_RECOVERY') {
+        window.location.href = '/update-password';
+        return;
+      }
+
       if (session?.user) {
         const email = session.user.email || '';
         if (ADMIN_EMAILS.includes(email)) {

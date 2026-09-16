@@ -52,6 +52,8 @@ import { ContactPage } from './pages/legal/ContactPage';
 import { PrivacyPolicyPage } from './pages/legal/PrivacyPolicyPage';
 import { TermsPage } from './pages/legal/TermsPage';
 import { AuthCallbackPage } from './pages/AuthCallbackPage';
+import { UpdatePasswordPage } from './pages/UpdatePasswordPage';
+
 
 const ADMIN_ROLES = [UserRole.ADMIN, UserRole.SUPER_ADMIN];
 
@@ -106,6 +108,8 @@ export default function App() {
             <Route path="/admin/login" element={<AdminLoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
             <Route path="/auth/callback" element={<AuthCallbackPage />} />
+            <Route path="/update-password" element={<UpdatePasswordPage />} />
+
 
             {/* ── Legal ── */}
             <Route path="/about" element={<AboutPage />} />

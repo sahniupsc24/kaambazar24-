@@ -3,6 +3,7 @@ import { DashboardLayout } from '../../layouts/DashboardLayout';
 import { WORKER_NAV_LINKS } from './WorkerDashboardPage';
 import { api } from '../../api/client';
 import { useAuth } from '../../contexts/AuthContext';
+import { supabase } from '../../lib/supabase';
 import { LoadingState, ErrorState, PrimaryButton, Card, SectionHeader, FormGroup, Input, StatusBadge, useToast } from '../../components/common/Primitives';
 
 function compressImage(file: File, maxWidth = 300, maxHeight = 300): Promise<string> {
@@ -280,8 +281,92 @@ export function WorkerProfilePage() {
             }}
           />
         </Card>
+
+        {/* Account Password Card for Google/Email users */}
+        <WorkerProfilePasswordCard />
       </div>
     </DashboardLayout>
+  );
+}
+
+function WorkerProfilePasswordCard() {
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [msg, setMsg] = useState<{ type: 'error' | 'success'; text: string } | null>(null);
+
+  const handleUpdate = async (e: FormEvent) => {
+    e.preventDefault();
+    setMsg(null);
+    if (password.length < 6) {
+      setMsg({ type: 'error', text: 'Password minimum 6 characters ka hona chahiye.' });
+      return;
+    }
+    if (password !== confirmPassword) {
+      setMsg({ type: 'error', text: 'Passwords match nahi kar rahe hain.' });
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const { error } = await supabase.auth.updateUser({ password });
+      if (error) throw error;
+      setMsg({ type: 'success', text: '🎉 Password successfully set! Ab aap Email + Password se bhi login kar sakte hain.' });
+      setPassword('');
+      setConfirmPassword('');
+    } catch (err: any) {
+      setMsg({ type: 'error', text: err?.message || 'Password update nahi ho paya.' });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <Card style={{ marginTop: 24 }}>
+      <h3 style={{ fontSize: 18, fontWeight: 800, margin: '0 0 8px 0', display: 'flex', alignItems: 'center', gap: 8 }}>
+        🔑 Account Password (पासवर्ड बनाएं / बदलें)
+      </h3>
+      <p style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 16 }}>
+        Agar aapne Google se sign up kiya hai ya password badalna chahte hain, toh yahan naya password set karein. Iske baad aap direct Email + Password se bhi login kar sakenge.
+      </p>
+
+      {msg && (
+        <div style={{
+          padding: '10px 14px', borderRadius: 8, fontSize: 13, marginBottom: 14,
+          backgroundColor: msg.type === 'success' ? '#dcfce7' : '#fee2e2',
+          color: msg.type === 'success' ? '#166534' : '#b91c1c',
+        }}>
+          {msg.text}
+        </div>
+      )}
+
+      <form onSubmit={handleUpdate} style={{ display: 'grid', gap: 14 }}>
+        <div className="grid-2" style={{ gap: 16 }}>
+          <FormGroup label="New Password (नया पासवर्ड)" required>
+            <Input
+              type="password"
+              placeholder="Minimum 6 characters"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
+          </FormGroup>
+          <FormGroup label="Confirm Password (पासवर्ड दोबारा लिखें)" required>
+            <Input
+              type="password"
+              placeholder="Repeat password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+            />
+          </FormGroup>
+        </div>
+
+        <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+          <PrimaryButton type="submit" disabled={loading}>
+            {loading ? 'Saving Password...' : '🔒 Save Password'}
+          </PrimaryButton>
+        </div>
+      </form>
+    </Card>
   );
 }
 

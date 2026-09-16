@@ -55,6 +55,12 @@ export function AuthCallbackPage() {
     }
 
     async function handleCallback() {
+      // 0. Check if this is a password recovery link
+      if (window.location.hash.includes('type=recovery') || window.location.search.includes('type=recovery')) {
+        navigate('/update-password', { replace: true });
+        return;
+      }
+
       // 1. Check existing session
       const { data: { session } } = await supabase.auth.getSession();
       if (session?.user) {
@@ -64,6 +70,11 @@ export function AuthCallbackPage() {
 
       // 2. Wait for auth state change (Google OAuth hash/code token exchange)
       const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, currentSession) => {
+        if (event === 'PASSWORD_RECOVERY') {
+          subscription.unsubscribe();
+          navigate('/update-password', { replace: true });
+          return;
+        }
         if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') && currentSession?.user) {
           subscription.unsubscribe();
           await processUser(currentSession.user);
