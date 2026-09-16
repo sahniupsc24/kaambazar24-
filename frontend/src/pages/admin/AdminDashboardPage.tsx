@@ -1,10 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { api } from '../../api/client';
+import { supabase } from '../../lib/supabase';
 import { DashboardLayout } from '../../layouts/DashboardLayout';
 import { StatCard, SkeletonCard, StatusBadge, SectionHeader } from '../../components/common/Primitives';
-import { EditJobModal } from '../../components/EditJobModal';
 
 import { 
   LayoutDashboard, Users, Briefcase, FileSignature, Wallet, 
@@ -38,25 +37,32 @@ export function AdminDashboardPage() {
   const [stats, setStats] = useState<any>(null);
   const [recentUsers, setRecentUsers] = useState<any[]>([]);
   const [recentJobs, setRecentJobs] = useState<any[]>([]);
-  const [recentPayments, setRecentPayments] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [editingJob, setEditingJob] = useState<any>(null);
   const navigate = useNavigate();
 
   async function loadDashboardData() {
     try {
-      const [statsRes, usersRes, jobsRes, paymentsRes] = await Promise.all([
-        api.get('/admin/stats'),
-        api.get('/admin/users?pageSize=5'),
-        api.get('/admin/jobs?pageSize=5'),
-        api.get('/admin/payments?pageSize=5'),
+      // ✅ Load stats from Supabase profiles table directly
+      const [allProfiles, jobsData] = await Promise.all([
+        supabase.from('profiles').select('id, email, phone, role, is_active, created_at').order('created_at', { ascending: false }),
+        supabase.from('jobs').select('id, title, status, created_at').order('created_at', { ascending: false }).limit(5),
       ]);
-      setStats(statsRes.data.data);
-      setRecentUsers(usersRes.data.data?.items ?? usersRes.data.data ?? []);
-      setRecentJobs(jobsRes.data.data?.items ?? jobsRes.data.data ?? []);
-      setRecentPayments(paymentsRes.data.data?.items ?? paymentsRes.data.data ?? []);
-    } catch {
-      // silently fail
+
+      const profiles = allProfiles.data || [];
+      const totalUsers = profiles.length;
+      const totalWorkers = profiles.filter((u: any) => u.role === 'WORKER').length;
+      const totalEmployers = profiles.filter((u: any) => u.role === 'EMPLOYER').length;
+      const totalAdmins = profiles.filter((u: any) => u.role === 'ADMIN' || u.role === 'SUPER_ADMIN').length;
+
+      setStats({ totalUsers, totalWorkers, totalEmployers, totalAdmins, activeJobs: (jobsData.data || []).filter((j: any) => j.status === 'OPEN').length, totalRevenue: 0 });
+      setRecentUsers(
+        profiles.slice(0, 5).map((u: any) => ({
+          id: u.id, email: u.email, phone: u.phone, role: u.role, isActive: u.is_active, createdAt: u.created_at
+        }))
+      );
+      setRecentJobs((jobsData.data || []).map((j: any) => ({ id: j.id, title: j.title, status: j.status, createdAt: j.created_at })));
+    } catch (e) {
+      console.error('Admin dashboard load error:', e);
     } finally {
       setLoading(false);
     }
@@ -72,7 +78,7 @@ export function AdminDashboardPage() {
       title="Admin Dashboard"
       breadcrumbs={[{ label: 'Admin' }, { label: 'Dashboard' }]}
     >
-      <SectionHeader title="Dashboard" subtitle="Platform overview and analytics" />
+      <SectionHeader title="Dashboard" subtitle={`Platform overview — ${stats?.totalUsers ?? 0} users registered`} />
 
       {/* ── Stat Cards ── */}
       <div className="grid-auto" style={{ marginBottom: 24 }}>
@@ -80,11 +86,11 @@ export function AdminDashboardPage() {
           Array.from({ length: 5 }).map((_, i) => <SkeletonCard key={i} />)
         ) : (
           <>
-            <StatCard title="Total Users" value={stats?.totalUsers ?? 0} icon={<Users size={22} />} color="#0d9488" trend={{ value: 12, label: 'vs last month' }} />
+            <StatCard title="Total Users" value={stats?.totalUsers ?? 0} icon={<Users size={22} />} color="#0d9488" />
             <StatCard title="Workers" value={stats?.totalWorkers ?? 0} icon={<Users size={22} />} color="#0284c7" />
             <StatCard title="Employers" value={stats?.totalEmployers ?? 0} icon={<Briefcase size={22} />} color="#6366f1" />
+            <StatCard title="Admins" value={stats?.totalAdmins ?? 0} icon={<Users size={22} />} color="#8b5cf6" />
             <StatCard title="Active Jobs" value={stats?.activeJobs ?? 0} icon={<Briefcase size={22} />} color="#f97316" />
-            <StatCard title="Total Revenue" value={`₹${(stats?.totalRevenue ?? 0).toLocaleString()}`} icon={<Wallet size={22} />} color="#16a34a" trend={{ value: 8, label: 'vs last month' }} />
           </>
         )}
       </div>
@@ -161,20 +167,11 @@ export function AdminDashboardPage() {
             <div key={j.id} style={{ padding: '10px 16px', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div>
                 <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{j.title}</div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <StatusBadge status={j.status} />
-                  <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>{j.employerProfile?.businessName ?? '—'}</span>
-                </div>
+                <StatusBadge status={j.status} />
               </div>
-              <button
-                onClick={() => setEditingJob(j)}
-                style={{ display: 'flex', alignItems: 'center', gap: 4, background: 'var(--primary-light, #f0fdf4)', border: '1px solid var(--border)', color: 'var(--primary)', padding: '4px 8px', borderRadius: 4, fontSize: 12, fontWeight: 600, cursor: 'pointer' }}
-              >
-                <Edit2 size={12} /> Edit
-              </button>
             </div>
           ))}
-          {recentJobs.length === 0 && <div style={{ padding: '16px', textAlign: 'center', color: 'var(--text-muted)', fontSize: 13 }}>No jobs yet</div>}
+          {recentJobs.length === 0 && <div style={{ padding: '16px', textAlign: 'center', color: 'var(--text-muted)', fontSize: 13 }}>No jobs posted yet</div>}
         </div>
 
         {/* Recent Payments */}
@@ -183,28 +180,10 @@ export function AdminDashboardPage() {
             <h3 style={{ fontSize: 14, fontWeight: 700, margin: 0, display: 'flex', alignItems: 'center', gap: 6 }}><Wallet size={16} /> Recent Payments</h3>
             <button onClick={() => navigate('/admin/payments')} style={{ background: 'none', border: 'none', color: 'var(--primary)', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>View All →</button>
           </div>
-          {recentPayments.slice(0, 5).map((p: any) => (
-            <div key={p.id} style={{ padding: '10px 16px', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <div>
-                <div style={{ fontSize: 13, fontWeight: 700 }}>₹{p.amount}</div>
-                <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{new Date(p.createdAt).toLocaleDateString()}</div>
-              </div>
-              <StatusBadge status={p.status} />
-            </div>
-          ))}
-          {recentPayments.length === 0 && <div style={{ padding: '16px', textAlign: 'center', color: 'var(--text-muted)', fontSize: 13 }}>No payments yet</div>}
+          <div style={{ padding: '16px', textAlign: 'center', color: 'var(--text-muted)', fontSize: 13 }}>Payment tracking coming soon</div>
         </div>
       </div>
 
-      {/* Edit Job Modal */}
-      {editingJob && (
-        <EditJobModal
-          job={editingJob}
-          isAdmin={true}
-          onClose={() => setEditingJob(null)}
-          onSaved={loadDashboardData}
-        />
-      )}
     </DashboardLayout>
   );
 }
