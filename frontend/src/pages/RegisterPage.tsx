@@ -7,7 +7,7 @@ import { Briefcase, Building2 } from 'lucide-react';
 import { SEOHead } from '../components/SEOHead';
 
 export function RegisterPage() {
-  const { register } = useAuth();
+  const { register, loginWithGoogle } = useAuth();
   const navigate = useNavigate();
   const [role, setRole] = useState<UserRole.WORKER | UserRole.EMPLOYER>(UserRole.WORKER);
   const [email, setEmail] = useState('');
@@ -16,6 +16,18 @@ export function RegisterPage() {
   const [name, setName] = useState('');
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
+
+  async function handleGoogleLogin() {
+    setGoogleLoading(true);
+    setError('');
+    try {
+      await loginWithGoogle();
+    } catch (err: any) {
+      setError('Google login failed. Please try again.');
+      setGoogleLoading(false);
+    }
+  }
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -36,7 +48,7 @@ export function RegisterPage() {
       });
       navigate(role === UserRole.WORKER ? '/worker/dashboard' : '/employer/dashboard');
     } catch (err: any) {
-      const msg = err?.response?.data?.message;
+      const msg = err?.message || err?.response?.data?.message;
       const details = err?.response?.data?.details;
       if (Array.isArray(details) && details.length > 0) {
         const detailMsgs = details.map((d: any) => `${d.path || d.param || 'field'}: ${d.msg}`).join(' | ');
@@ -45,6 +57,7 @@ export function RegisterPage() {
         setError(msg ?? 'Registration failed. Please try again.');
       }
     } finally {
+
       setIsSubmitting(false);
     }
   }
@@ -94,8 +107,48 @@ export function RegisterPage() {
           </button>
         </div>
 
+        {/* Google Sign In Button */}
+        <button
+          type="button"
+          onClick={handleGoogleLogin}
+          disabled={googleLoading}
+          style={{
+            width: '100%',
+            padding: '12px 16px',
+            marginBottom: 16,
+            borderRadius: 'var(--radius-md)',
+            border: '1px solid var(--border)',
+            background: 'var(--bg-card)',
+            color: 'var(--text-main)',
+            fontSize: 14,
+            fontWeight: 700,
+            cursor: googleLoading ? 'not-allowed' : 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 10,
+            transition: 'all 0.2s ease',
+            boxShadow: 'var(--shadow-sm)',
+            opacity: googleLoading ? 0.7 : 1,
+          }}
+        >
+          {!googleLoading && (
+            <svg width="20" height="20" viewBox="0 0 24 24">
+              <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17z"/>
+              <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.26v3.14C3.25 21.32 7.33 24 12 24z"/>
+              <path fill="#FBBC05" d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.59H1.26C.46 8.18 0 10.02 0 12s.46 3.82 1.26 5.41l4.02-3.14z"/>
+              <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.33 0 3.25 2.68 1.26 6.59l4.02 3.14c.95-2.83 3.6-4.98 6.72-4.98z"/>
+            </svg>
+          )}
+          {googleLoading ? 'Redirecting to Google...' : 'Sign up with Google'}
+        </button>
 
-
+        {/* OR Divider */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
+          <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
+          <span style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 600 }}>OR REGISTER WITH FORM</span>
+          <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
+        </div>
 
         <form onSubmit={handleSubmit} style={{ display: 'grid', gap: 16 }}>
           <div>

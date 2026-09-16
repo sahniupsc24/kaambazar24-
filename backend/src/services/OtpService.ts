@@ -29,10 +29,23 @@ export class OtpService {
       repo.create({ identifier, codeHash, purpose, expiresAt, attemptCount: 0, isUsed: false })
     );
 
-    // eslint-disable-next-line no-console
-    if (process.env.NODE_ENV !== 'production') {
-      console.log(`[MOCK SMS] OTP for ${identifier}: ${code} (expires in ${OTP_TTL_MINUTES} min)`);
+    // Send real SMS via Fast2SMS (free Indian SMS provider)
+    const fast2smsKey = process.env.FAST2SMS_API_KEY;
+    if (fast2smsKey) {
+      try {
+        const phone = identifier.replace(/^\+91/, '').replace(/\D/g, '');
+        const url = `https://www.fast2sms.com/dev/bulkV2?authorization=${fast2smsKey}&variables_values=${code}&route=otp&numbers=${phone}`;
+        await fetch(url);
+      } catch (err) {
+        // eslint-disable-next-line no-console
+        console.error('[Fast2SMS] SMS send failed:', err);
+      }
+    } else {
+      // Dev mode: print OTP to console
+      // eslint-disable-next-line no-console
+      console.log(`[DEV OTP] ${identifier}: ${code} (expires in ${OTP_TTL_MINUTES} min)`);
     }
+
     return code;
   }
 

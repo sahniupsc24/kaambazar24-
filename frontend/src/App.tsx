@@ -51,6 +51,7 @@ import { AboutPage } from './pages/legal/AboutPage';
 import { ContactPage } from './pages/legal/ContactPage';
 import { PrivacyPolicyPage } from './pages/legal/PrivacyPolicyPage';
 import { TermsPage } from './pages/legal/TermsPage';
+import { AuthCallbackPage } from './pages/AuthCallbackPage';
 
 const ADMIN_ROLES = [UserRole.ADMIN, UserRole.SUPER_ADMIN];
 
@@ -84,10 +85,13 @@ function JobPortalWrapper() {
   return <JobListingPage />;
 }
 
+import { MandatoryPhoneModal } from './components/MandatoryPhoneModal';
+
 export default function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
+        <MandatoryPhoneModal />
         <NavBar />
         <div style={{ minHeight: '70vh' }}>
           <Routes>
@@ -99,6 +103,7 @@ export default function App() {
             <Route path="/login" element={<LoginPage />} />
             <Route path="/admin/login" element={<AdminLoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
+            <Route path="/auth/callback" element={<AuthCallbackPage />} />
 
             {/* ── Legal ── */}
             <Route path="/about" element={<AboutPage />} />

@@ -11,6 +11,8 @@ export interface AuthUser {
   phone?: string | null;
   role: UserRole;
   isActive: boolean;
+  isEmailVerified?: boolean;
+  isPhoneVerified?: boolean;
   avatarUrl?: string | null;
 }
 

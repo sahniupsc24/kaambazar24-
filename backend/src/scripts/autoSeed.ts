@@ -12,33 +12,45 @@ import { hashPassword } from '../utils/password';
 export async function autoSeedOnStartup() {
   const userRepo = AppDataSource.getRepository(User);
 
-  // --- SUPER_ADMIN account ---
-  const adminEmail = process.env.SEED_ADMIN_EMAIL ?? 'examsform3@gmail.com';
-  const adminPassword = process.env.SEED_ADMIN_PASSWORD ?? 'Shivkripa@531';
-  const adminUsername = process.env.SEED_ADMIN_USERNAME ?? 'admin';
+  // --- SUPER_ADMIN accounts (Dual Admin) ---
+  const superAdmin1Email = 'satyamsahani293@gmail.com';
+  const superAdmin1Password = 'RealmeSatyam@531#';
 
-  let existingAdmin = await userRepo.findOne({ where: { email: adminEmail } });
-  if (!existingAdmin) {
-    existingAdmin = await userRepo.findOne({ where: { username: adminUsername } as any });
-  }
+  const superAdmin2Email = process.env.SEED_ADMIN_EMAIL ?? 'examsform3@gmail.com';
+  const superAdmin2Password = process.env.SEED_ADMIN_PASSWORD ?? 'Shivkripa@531';
 
-  if (!existingAdmin) {
-    const passwordHash = await hashPassword(adminPassword);
-    const adminUser = userRepo.create({
-      email: adminEmail,
-      username: adminUsername,
-      passwordHash,
+  // Seed SuperAdmin 1
+  let admin1 = await userRepo.findOne({ where: { email: superAdmin1Email } });
+  const hash1 = await hashPassword(superAdmin1Password);
+  if (!admin1) {
+    await userRepo.save(userRepo.create({
+      email: superAdmin1Email,
+      username: 'satyam_admin',
+      passwordHash: hash1,
       role: UserRole.SUPER_ADMIN,
       isActive: true,
-    });
-    await userRepo.save(adminUser);
-    // eslint-disable-next-line no-console
-    console.log(`✅ Created SUPER_ADMIN: email="${adminEmail}"`);
+    }));
+    console.log(`✅ Created SUPER_ADMIN: email="${superAdmin1Email}"`);
   } else {
-    const passwordHash = await hashPassword(adminPassword);
-    await userRepo.update({ id: existingAdmin.id }, { email: adminEmail, passwordHash, isActive: true });
-    // eslint-disable-next-line no-console
-    console.log(`✅ Updated SUPER_ADMIN password & email.`);
+    await userRepo.update({ id: admin1.id }, { passwordHash: hash1, role: UserRole.SUPER_ADMIN, isActive: true });
+    console.log(`✅ Updated SUPER_ADMIN: email="${superAdmin1Email}"`);
+  }
+
+  // Seed SuperAdmin 2
+  let admin2 = await userRepo.findOne({ where: { email: superAdmin2Email } });
+  const hash2 = await hashPassword(superAdmin2Password);
+  if (!admin2) {
+    await userRepo.save(userRepo.create({
+      email: superAdmin2Email,
+      username: 'examsform_admin',
+      passwordHash: hash2,
+      role: UserRole.SUPER_ADMIN,
+      isActive: true,
+    }));
+    console.log(`✅ Created SUPER_ADMIN: email="${superAdmin2Email}"`);
+  } else {
+    await userRepo.update({ id: admin2.id }, { passwordHash: hash2, role: UserRole.SUPER_ADMIN, isActive: true });
+    console.log(`✅ Updated SUPER_ADMIN: email="${superAdmin2Email}"`);
   }
 
   // --- Standard ADMIN account ---

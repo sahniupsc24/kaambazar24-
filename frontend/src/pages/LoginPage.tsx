@@ -3,11 +3,12 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { api } from '../api/client';
 import { ErrorState, PrimaryButton, SecondaryButton } from '../components/common/Primitives';
+import { SEOHead } from '../components/SEOHead';
 
 type Mode = 'password' | 'otp';
 
 export function LoginPage() {
-  const { loginWithPassword, requestOtp, verifyOtp } = useAuth();
+  const { loginWithPassword, loginWithGoogle, requestOtp, verifyOtp } = useAuth();
   const navigate = useNavigate();
 
   const [mode, setMode] = useState<Mode>('password');
@@ -20,17 +21,15 @@ export function LoginPage() {
   const [otpSent, setOtpSent] = useState(false);
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-
+  const [googleLoading, setGoogleLoading] = useState(false);
 
   function handleRoleRedirect(role: string) {
     if (role === 'ADMIN' || role === 'SUPER_ADMIN') {
       navigate('/admin/dashboard');
     } else if (role === 'EMPLOYER') {
       navigate('/employer/dashboard');
-    } else if (role === 'WORKER') {
-      navigate('/worker/dashboard');
     } else {
-      navigate('/');
+      navigate('/worker/dashboard');
     }
   }
 
@@ -42,9 +41,21 @@ export function LoginPage() {
       const u = await loginWithPassword(identifier, password);
       handleRoleRedirect(u.role);
     } catch (err: any) {
-      setError(err?.response?.data?.message ?? 'Login failed. Please check your credentials.');
+      setError(err?.message || 'Login failed. Please check your credentials.');
     } finally {
       setIsSubmitting(false);
+    }
+  }
+
+  async function handleGoogleLogin() {
+    setGoogleLoading(true);
+    setError('');
+    try {
+      await loginWithGoogle();
+      // Google redirects to /auth/callback — no navigate needed here
+    } catch (err: any) {
+      setError('Google login failed. Please try again.');
+      setGoogleLoading(false);
     }
   }
 
@@ -97,6 +108,7 @@ export function LoginPage() {
       padding: '16px',
       background: 'var(--bg-page)',
     }}>
+      <SEOHead title="Login — Kaam Bazar" />
       <div style={{
         width: '100%',
         maxWidth: 440,
@@ -106,17 +118,15 @@ export function LoginPage() {
         border: '1px solid var(--border)',
         boxShadow: 'var(--shadow-lg)',
       }}>
+
         {/* Header */}
         <div style={{ textAlign: 'center', marginBottom: 24 }}>
           <div style={{
-            width: 52,
-            height: 52,
+            width: 52, height: 52,
             borderRadius: 14,
             background: 'linear-gradient(135deg, #0d9488 0%, #0369a1 100%)',
             color: '#fff',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
             fontSize: 26,
             margin: '0 auto 12px',
             boxShadow: '0 4px 12px rgba(13,148,136,0.3)',
@@ -131,31 +141,64 @@ export function LoginPage() {
           </p>
         </div>
 
+        {/* ✅ Google Sign In Button */}
+        <button
+          type="button"
+          onClick={handleGoogleLogin}
+          disabled={googleLoading}
+          style={{
+            width: '100%',
+            padding: '12px 16px',
+            marginBottom: 16,
+            borderRadius: 'var(--radius-md)',
+            border: '1px solid var(--border)',
+            background: 'var(--bg-card)',
+            color: 'var(--text-main)',
+            fontSize: 14,
+            fontWeight: 700,
+            cursor: googleLoading ? 'not-allowed' : 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 10,
+            transition: 'all 0.2s ease',
+            boxShadow: 'var(--shadow-sm)',
+            opacity: googleLoading ? 0.7 : 1,
+          }}
+        >
+          {!googleLoading && (
+            <svg width="20" height="20" viewBox="0 0 24 24">
+              <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17z"/>
+              <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.26v3.14C3.25 21.32 7.33 24 12 24z"/>
+              <path fill="#FBBC05" d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.59H1.26C.46 8.18 0 10.02 0 12s.46 3.82 1.26 5.41l4.02-3.14z"/>
+              <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.33 0 3.25 2.68 1.26 6.59l4.02 3.14c.95-2.83 3.6-4.98 6.72-4.98z"/>
+            </svg>
+          )}
+          {googleLoading ? 'Redirecting to Google...' : 'Sign in with Google'}
+        </button>
 
+        {/* OR Divider */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
+          <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
+          <span style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 600 }}>OR</span>
+          <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
+        </div>
 
         {/* Mode Tabs */}
         <div style={{
-          display: 'flex',
-          gap: 6,
-          marginBottom: 20,
-          background: 'var(--bg-hover)',
-          padding: 4,
-          borderRadius: 'var(--radius-md)',
-          border: '1px solid var(--border)',
+          display: 'flex', gap: 6, marginBottom: 20,
+          background: 'var(--bg-hover)', padding: 4,
+          borderRadius: 'var(--radius-md)', border: '1px solid var(--border)',
         }}>
           <button
             type="button"
             onClick={() => { setMode('password'); setError(''); }}
             style={{
-              flex: 1,
-              padding: '9px 12px',
-              borderRadius: 'var(--radius-sm)',
-              border: 'none',
+              flex: 1, padding: '9px 12px',
+              borderRadius: 'var(--radius-sm)', border: 'none',
               background: mode === 'password' ? 'var(--bg-card)' : 'transparent',
               color: mode === 'password' ? 'var(--primary)' : 'var(--text-muted)',
-              cursor: 'pointer',
-              fontWeight: 700,
-              fontSize: 13,
+              cursor: 'pointer', fontWeight: 700, fontSize: 13,
               boxShadow: mode === 'password' ? 'var(--shadow-sm)' : 'none',
               transition: 'all 0.15s ease',
             }}
@@ -166,15 +209,11 @@ export function LoginPage() {
             type="button"
             onClick={() => { setMode('otp'); setError(''); }}
             style={{
-              flex: 1,
-              padding: '9px 12px',
-              borderRadius: 'var(--radius-sm)',
-              border: 'none',
+              flex: 1, padding: '9px 12px',
+              borderRadius: 'var(--radius-sm)', border: 'none',
               background: mode === 'otp' ? 'var(--bg-card)' : 'transparent',
               color: mode === 'otp' ? 'var(--primary)' : 'var(--text-muted)',
-              cursor: 'pointer',
-              fontWeight: 700,
-              fontSize: 13,
+              cursor: 'pointer', fontWeight: 700, fontSize: 13,
               boxShadow: mode === 'otp' ? 'var(--shadow-sm)' : 'none',
               transition: 'all 0.15s ease',
             }}
@@ -183,12 +222,12 @@ export function LoginPage() {
           </button>
         </div>
 
-        {/* Password Login Form */}
+        {/* ✅ Password Login — Email OR Phone number */}
         {mode === 'password' && (
           <form onSubmit={handlePasswordSubmit} style={{ display: 'grid', gap: 14 }}>
             <div>
               <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: 'var(--text-muted)', marginBottom: 6 }}>
-                Email / Phone / Username
+                Email or Mobile Number
               </label>
               <input
                 type="text"
@@ -199,6 +238,9 @@ export function LoginPage() {
                 onChange={(e) => setIdentifier(e.target.value)}
                 style={inputStyle}
               />
+              <p style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 4 }}>
+                📱 Mobile number ya 📧 Email — dono se login hoga
+              </p>
             </div>
             <div>
               <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: 'var(--text-muted)', marginBottom: 6 }}>
@@ -217,19 +259,12 @@ export function LoginPage() {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  title={showPassword ? 'Hide password' : 'Show password'}
                   style={{
-                    position: 'absolute',
-                    right: 10,
-                    top: '50%',
+                    position: 'absolute', right: 10, top: '50%',
                     transform: 'translateY(-50%)',
-                    background: 'none',
-                    border: 'none',
-                    cursor: 'pointer',
-                    fontSize: 16,
-                    color: 'var(--text-muted)',
-                    padding: 4,
-                    lineHeight: 1,
+                    background: 'none', border: 'none',
+                    cursor: 'pointer', fontSize: 16,
+                    color: 'var(--text-muted)', padding: 4,
                   }}
                 >
                   {showPassword ? '🙈' : '👁️'}
@@ -252,7 +287,7 @@ export function LoginPage() {
           </form>
         )}
 
-        {/* OTP — Step 1: Enter Phone */}
+        {/* OTP Step 1 */}
         {mode === 'otp' && !otpSent && (
           <form onSubmit={handleRequestOtp} style={{ display: 'grid', gap: 14 }}>
             <div>
@@ -265,7 +300,7 @@ export function LoginPage() {
                 required
                 maxLength={10}
                 value={phone}
-                onChange={(e) => setPhone(e.target.value)}
+                onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
                 style={inputStyle}
               />
             </div>
@@ -276,14 +311,12 @@ export function LoginPage() {
           </form>
         )}
 
-        {/* OTP — Step 2: Verify */}
+        {/* OTP Step 2 */}
         {mode === 'otp' && otpSent && (
           <form onSubmit={handleVerifyOtp} style={{ display: 'grid', gap: 14 }}>
             <p style={{ fontSize: 13, color: 'var(--text-muted)', margin: 0, textAlign: 'center' }}>
               OTP sent to <strong>{phone}</strong>. Check your SMS.
             </p>
-
-
             <input
               type="text"
               inputMode="numeric"
@@ -291,14 +324,8 @@ export function LoginPage() {
               required
               maxLength={6}
               value={otp}
-              onChange={(e) => setOtp(e.target.value)}
-              style={{
-                ...inputStyle,
-                fontSize: 20,
-                textAlign: 'center',
-                letterSpacing: 8,
-                fontWeight: 700,
-              }}
+              onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
+              style={{ ...inputStyle, fontSize: 20, textAlign: 'center', letterSpacing: 8, fontWeight: 700 }}
             />
             {error && <ErrorState message={error} />}
             <PrimaryButton type="submit" disabled={isSubmitting}>
@@ -310,15 +337,11 @@ export function LoginPage() {
           </form>
         )}
 
-
         {/* Register Link */}
         <div style={{
-          marginTop: 18,
-          paddingTop: 16,
+          marginTop: 18, paddingTop: 16,
           borderTop: '1px solid var(--border)',
-          textAlign: 'center',
-          fontSize: 14,
-          color: 'var(--text-muted)',
+          textAlign: 'center', fontSize: 14, color: 'var(--text-muted)',
         }}>
           Don't have an account?{' '}
           <Link to="/register" style={{ color: 'var(--primary)', fontWeight: 700, textDecoration: 'none' }}>
@@ -338,7 +361,6 @@ function ForgotPasswordModal({ onClose }: { onClose: () => void }) {
   const [step, setStep] = useState<1 | 2>(1);
   const [ident, setIdent] = useState('');
   const [code, setCode] = useState('');
-
   const [newPass, setNewPass] = useState('');
   const [loading, setLoading] = useState(false);
   const [msg, setMsg] = useState<{ type: 'error' | 'success'; text: string } | null>(null);
@@ -375,8 +397,7 @@ function ForgotPasswordModal({ onClose }: { onClose: () => void }) {
   return (
     <div
       style={{
-        position: 'fixed',
-        top: 0, left: 0, right: 0, bottom: 0,
+        position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
         backgroundColor: 'rgba(0,0,0,0.6)',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         zIndex: 2000, padding: 16, backdropFilter: 'blur(3px)',
@@ -385,12 +406,9 @@ function ForgotPasswordModal({ onClose }: { onClose: () => void }) {
     >
       <div
         style={{
-          backgroundColor: 'var(--bg-card)',
-          borderRadius: 16,
-          border: '1px solid var(--border)',
-          width: '100%', maxWidth: 420,
-          padding: 24,
-          color: 'var(--text-main)',
+          backgroundColor: 'var(--bg-card)', borderRadius: 16,
+          border: '1px solid var(--border)', width: '100%', maxWidth: 420,
+          padding: 24, color: 'var(--text-main)',
         }}
         onClick={(e) => e.stopPropagation()}
       >
@@ -400,7 +418,11 @@ function ForgotPasswordModal({ onClose }: { onClose: () => void }) {
         </div>
 
         {msg && (
-          <div style={{ padding: '10px 14px', borderRadius: 8, fontSize: 13, marginBottom: 14, backgroundColor: msg.type === 'success' ? '#dcfce7' : '#fee2e2', color: msg.type === 'success' ? '#166534' : '#b91c1c' }}>
+          <div style={{
+            padding: '10px 14px', borderRadius: 8, fontSize: 13, marginBottom: 14,
+            backgroundColor: msg.type === 'success' ? '#dcfce7' : '#fee2e2',
+            color: msg.type === 'success' ? '#166534' : '#b91c1c',
+          }}>
             {msg.text}
           </div>
         )}
@@ -408,7 +430,7 @@ function ForgotPasswordModal({ onClose }: { onClose: () => void }) {
         {step === 1 ? (
           <form onSubmit={handleRequestOtp} style={{ display: 'grid', gap: 14 }}>
             <p style={{ fontSize: 13, color: 'var(--text-muted)', margin: 0 }}>
-              Enter your registered Email or Mobile number to receive a reset OTP code.
+              Apna registered Email ya Mobile number enter karo.
             </p>
             <input
               type="text"
@@ -424,21 +446,18 @@ function ForgotPasswordModal({ onClose }: { onClose: () => void }) {
           </form>
         ) : (
           <form onSubmit={handleResetPassword} style={{ display: 'grid', gap: 14 }}>
-
             <input
               type="text"
               placeholder="Enter 6-digit OTP"
-              required
-              maxLength={6}
+              required maxLength={6}
               value={code}
               onChange={(e) => setCode(e.target.value)}
               style={{ width: '100%', padding: '10px 14px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--bg-input)', color: 'var(--text-main)', fontSize: 16, textAlign: 'center', letterSpacing: 4 }}
             />
             <input
               type="password"
-              placeholder="Enter New Password (min 6 chars)"
-              required
-              minLength={6}
+              placeholder="New Password (min 6 chars)"
+              required minLength={6}
               value={newPass}
               onChange={(e) => setNewPass(e.target.value)}
               style={{ width: '100%', padding: '10px 14px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--bg-input)', color: 'var(--text-main)', fontSize: 14 }}
