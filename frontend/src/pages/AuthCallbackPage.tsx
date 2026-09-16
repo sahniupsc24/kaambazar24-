@@ -2,51 +2,90 @@ import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 
+const ADMIN_EMAILS = ['satyamsahani293@gmail.com', 'examsform3@gmail.com'];
+
 export function AuthCallbackPage() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const handleCallback = async () => {
-      const { data: { session }, error } = await supabase.auth.getSession();
+    let mounted = true;
 
-      if (error || !session?.user) {
-        navigate('/login');
+    async function processUser(user: any) {
+      if (!mounted) return;
+      const email = user.email || '';
+      const userId = user.id;
+      const isAdmin = ADMIN_EMAILS.includes(email.toLowerCase());
+      const roleToSet = isAdmin ? 'SUPER_ADMIN' : 'WORKER';
+
+      try {
+        const { data: existing } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', userId)
+          .single();
+
+        if (!existing) {
+          await supabase.from('profiles').insert([{
+            id: userId,
+            email,
+            role: roleToSet,
+            is_active: true,
+          }]);
+        } else if (isAdmin && existing.role !== 'SUPER_ADMIN') {
+          await supabase.from('profiles').update({ role: 'SUPER_ADMIN' }).eq('id', userId);
+        }
+
+        const finalRole = isAdmin ? 'SUPER_ADMIN' : (existing?.role || 'WORKER');
+        if (finalRole === 'ADMIN' || finalRole === 'SUPER_ADMIN') {
+          navigate('/admin/dashboard', { replace: true });
+        } else if (finalRole === 'EMPLOYER') {
+          navigate('/employer/dashboard', { replace: true });
+        } else {
+          navigate('/worker/dashboard', { replace: true });
+        }
+      } catch (e) {
+        console.error('Callback error:', e);
+        if (isAdmin) {
+          navigate('/admin/dashboard', { replace: true });
+        } else {
+          navigate('/worker/dashboard', { replace: true });
+        }
+      }
+    }
+
+    async function handleCallback() {
+      // 1. Check existing session
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user) {
+        await processUser(session.user);
         return;
       }
 
-      const userId = session.user.id;
-      const email = session.user.email || '';
+      // 2. Wait for auth state change (Google OAuth hash/code token exchange)
+      const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, currentSession) => {
+        if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') && currentSession?.user) {
+          subscription.unsubscribe();
+          await processUser(currentSession.user);
+        }
+      });
 
-      // Check if profile exists
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('role')
-        .eq('id', userId)
-        .single();
+      // 3. Fallback timeout
+      const timeout = setTimeout(() => {
+        subscription.unsubscribe();
+        navigate('/login', { replace: true });
+      }, 4000);
 
-      if (!profile) {
-        // Create profile for new Google user
-        await supabase.from('profiles').insert([{
-          id: userId,
-          email,
-          role: 'WORKER',
-        }]);
-        navigate('/worker/dashboard');
-        return;
-      }
-
-      // Redirect based on role
-      const role = profile.role;
-      if (role === 'ADMIN' || role === 'SUPER_ADMIN') {
-        navigate('/admin/dashboard');
-      } else if (role === 'EMPLOYER') {
-        navigate('/employer/dashboard');
-      } else {
-        navigate('/worker/dashboard');
-      }
-    };
+      return () => {
+        clearTimeout(timeout);
+        subscription.unsubscribe();
+      };
+    }
 
     handleCallback();
+
+    return () => {
+      mounted = false;
+    };
   }, [navigate]);
 
   return (
@@ -67,8 +106,8 @@ export function AuthCallbackPage() {
         animation: 'spin 0.8s linear infinite',
       }} />
       <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-      <p style={{ fontSize: 16, fontWeight: 600 }}>Logging you in...</p>
-      <p style={{ fontSize: 13, color: 'var(--text-muted)' }}>Please wait while we verify your account.</p>
+      <p style={{ fontSize: 16, fontWeight: 600 }}>Logging you in as Admin...</p>
+      <p style={{ fontSize: 13, color: 'var(--text-muted)' }}>Verifying Google credentials and setting up your session.</p>
     </div>
   );
 }
