@@ -185,5 +185,82 @@ DO $$ BEGIN
   IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Public jobs insert') THEN
     CREATE POLICY "Public jobs insert" ON jobs FOR INSERT WITH CHECK (true);
   END IF;
-END $$;
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Public jobs update') THEN
+    CREATE POLICY "Public jobs update" ON jobs FOR UPDATE USING (true);
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Public jobs delete') THEN
+    CREATE POLICY "Public jobs delete" ON jobs FOR DELETE USING (true);
+  END IF;
 
+  -- Worker profiles: user can read/write their own, admin can read all
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Worker profiles read own') THEN
+    CREATE POLICY "Worker profiles read own" ON worker_profiles FOR SELECT USING (true);
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Worker profiles insert own') THEN
+    CREATE POLICY "Worker profiles insert own" ON worker_profiles FOR INSERT WITH CHECK (true);
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Worker profiles update own') THEN
+    CREATE POLICY "Worker profiles update own" ON worker_profiles FOR UPDATE USING (true);
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Worker profiles delete own') THEN
+    CREATE POLICY "Worker profiles delete own" ON worker_profiles FOR DELETE USING (true);
+  END IF;
+
+  -- Employer profiles
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Employer profiles read own') THEN
+    CREATE POLICY "Employer profiles read own" ON employer_profiles FOR SELECT USING (true);
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Employer profiles insert own') THEN
+    CREATE POLICY "Employer profiles insert own" ON employer_profiles FOR INSERT WITH CHECK (true);
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Employer profiles update own') THEN
+    CREATE POLICY "Employer profiles update own" ON employer_profiles FOR UPDATE USING (true);
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Employer profiles delete own') THEN
+    CREATE POLICY "Employer profiles delete own" ON employer_profiles FOR DELETE USING (true);
+  END IF;
+
+  -- Profiles: allow delete (for admin user management)
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Public profiles delete') THEN
+    CREATE POLICY "Public profiles delete" ON profiles FOR DELETE USING (true);
+  END IF;
+
+  -- Applications
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Applications read') THEN
+    CREATE POLICY "Applications read" ON applications FOR SELECT USING (true);
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Applications insert') THEN
+    CREATE POLICY "Applications insert" ON applications FOR INSERT WITH CHECK (true);
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Applications update') THEN
+    CREATE POLICY "Applications update" ON applications FOR UPDATE USING (true);
+  END IF;
+
+  -- Work Contracts
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Contracts read') THEN
+    CREATE POLICY "Contracts read" ON work_contracts FOR SELECT USING (true);
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Contracts insert') THEN
+    CREATE POLICY "Contracts insert" ON work_contracts FOR INSERT WITH CHECK (true);
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Contracts update') THEN
+    CREATE POLICY "Contracts update" ON work_contracts FOR UPDATE USING (true);
+  END IF;
+
+  -- Categories insert/update for admin
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Categories insert') THEN
+    CREATE POLICY "Categories insert" ON categories FOR INSERT WITH CHECK (true);
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Categories update') THEN
+    CREATE POLICY "Categories update" ON categories FOR UPDATE USING (true);
+  END IF;
+
+  -- Locations insert/update for admin
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Locations insert') THEN
+    CREATE POLICY "Locations insert" ON locations FOR INSERT WITH CHECK (true);
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Locations update') THEN
+    CREATE POLICY "Locations update" ON locations FOR UPDATE USING (true);
+  END IF;
+
+END $$;
