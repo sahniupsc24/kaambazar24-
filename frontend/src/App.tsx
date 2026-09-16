@@ -86,11 +86,13 @@ function JobPortalWrapper() {
 }
 
 import { MandatoryPhoneModal } from './components/MandatoryPhoneModal';
+import { Analytics } from '@vercel/analytics/react';
 
 export default function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
+        <Analytics />
         <MandatoryPhoneModal />
         <NavBar />
         <div style={{ minHeight: '70vh' }}>
@@ -149,3 +151,4 @@ export default function App() {
     </BrowserRouter>
   );
 }
+
